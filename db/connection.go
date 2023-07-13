@@ -13,7 +13,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var client *mongo.Client
+var DB *mongo.Client
 
 var err error
 
@@ -29,17 +29,17 @@ func ConnectDB() {
 		log.Fatal("You must set your 'MONGODB_URI' environmental variable. See\n\t https://www.mongodb.com/docs/drivers/go/current/usage-examples/#environment-variable")
 	}
 
-	client, err = mongo.Connect(context.TODO(), options.Client().ApplyURI(uri))
+	DB, err = mongo.Connect(context.TODO(), options.Client().ApplyURI(uri))
 	if err != nil {
 		panic(err)
 	}
 	defer func() {
-		if err = client.Disconnect(context.TODO()); err != nil {
+		if err = DB.Disconnect(context.TODO()); err != nil {
 			panic(err)
 		}
 	}()
 
-	coll := client.Database("GoCafeDB").Collection("users")
+	coll := DB.Database("GoCafeDB").Collection("users")
 	title := "Back to the Future"
 	var result bson.M
 	err = coll.FindOne(context.TODO(), bson.D{{Key: "title", Value: title}}).Decode(&result)

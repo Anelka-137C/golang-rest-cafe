@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/Anelka-137C/cafe-app/db"
+	"github.com/Anelka-137C/cafe-app/middlewares"
 
 	"github.com/Anelka-137C/cafe-app/routes"
 
@@ -11,6 +12,6 @@ import (
 func main() {
 	db.ConnectDB()
 	e := echo.New()
-	e.GET("/users", routes.CreateUser)
+	e.GET("/users", routes.CreateUser, middlewares.ValidateEmail)
 	e.Logger.Fatal(e.Start(":1323"))
 }
