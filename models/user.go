@@ -5,13 +5,5 @@ type User struct {
 	Email    string `json:"email" bson:"email"`
 	Role     string `json:"role" bson:"role"`
 	Password string `json:"password" bson:"password"`
-}
-
-func NewUser(name string, email string, role string, password string) *User {
-	return &User{
-		Name:     name,
-		Email:    email,
-		Role:     role,
-		Password: password,
-	}
+	Active   bool   `json:"active" bson:"active"`
 }

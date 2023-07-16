@@ -16,18 +16,23 @@ type ErrorMessage struct {
 	msg string
 }
 
+var User models.User
+
 func ValidateEmail(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 
-		var user models.User
+		var userFromDB models.User
+		userInfo := c.Request().Body
 		ctx, _ := context.WithTimeout(context.Background(), 15*time.Second)
-		json.NewDecoder(c.Request().Body).Decode(&user)
-		filter := bson.D{{Key: "email", Value: user.Email}}
-		result := db.UserColl.FindOne(ctx, filter)
-		if result != nil {
+
+		json.NewDecoder(userInfo).Decode(&User)
+		filter := bson.D{{Key: "email", Value: User.Email}}
+		db.UserColl.FindOne(ctx, filter).Decode(&userFromDB)
+
+		if userFromDB != (models.User{}) {
 			return c.String(http.StatusBadRequest, "Usuario con el email ingresado ya existe")
 		}
 
-		return nil
+		return next(c)
 	}
 }

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"reflect"
 
 	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -30,14 +29,7 @@ func ConnectDB() {
 
 	DB, _ := mongo.Connect(context.TODO(), options.Client().ApplyURI("mongodb+srv://nacasas:D960bi8NAzg3hKIN@clusteranelka.vkgfe8i.mongodb.net/GoCafe"))
 
-	// defer func() {
-	// 	if err = DB.Disconnect(context.TODO()); err != nil {
-	// 		panic(err)
-	// 	}
-	// }()
-
 	UserColl = DB.Database("GoCafe").Collection("users")
 	fmt.Printf("Base de datos en linea")
-	fmt.Println("Tipo de coleccion: ", reflect.TypeOf(UserColl), "\n")
 
 }
