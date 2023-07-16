@@ -12,6 +12,6 @@ import (
 func main() {
 	db.ConnectDB()
 	e := echo.New()
-	e.GET("/users", routes.CreateUser, middlewares.ValidateEmail)
+	e.POST("/users", routes.CreateUser, middlewares.ValidateEmail)
 	e.Logger.Fatal(e.Start(":1323"))
 }

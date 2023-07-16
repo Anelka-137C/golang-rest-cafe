@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/Anelka-137C/cafe-app/db"
 	"github.com/Anelka-137C/cafe-app/models"
@@ -19,17 +20,12 @@ func ValidateEmail(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 
 		var user models.User
-		resUserRepeated := ErrorMessage{
-			msg: "Usuario ya esta registrado",
-		}
+		ctx, _ := context.WithTimeout(context.Background(), 15*time.Second)
 		json.NewDecoder(c.Request().Body).Decode(&user)
-
-		collection := db.DB.Database("GoCafeDB").Collection("users")
-
-		err := collection.FindOne(context.TODO(), bson.D{{Key: "email", Value: user.Email}})
-
-		if err != nil {
-			return c.JSON(http.StatusConflict, resUserRepeated)
+		filter := bson.D{{Key: "email", Value: user.Email}}
+		result := db.UserColl.FindOne(ctx, filter)
+		if result != nil {
+			return c.String(http.StatusBadRequest, "Usuario con el email ingresado ya existe")
 		}
 
 		return nil
