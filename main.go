@@ -16,5 +16,7 @@ func main() {
 	e.POST("/users", routes.CreateUser)
 
 	e.GET("/users", routes.GetAllUsers)
+
+	e.GET("users/:email", routes.GetUser)
 	e.Logger.Fatal(e.Start(":1323"))
 }

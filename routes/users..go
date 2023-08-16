@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"reflect"
 	"time"
 
 	"github.com/labstack/echo/v4"
-	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/bson"
 
 	"github.com/Anelka-137C/cafe-app/db"
 	"github.com/Anelka-137C/cafe-app/middlewares"
@@ -30,19 +31,30 @@ func CreateUser(c echo.Context) error {
 		fmt.Println("Tipo de insercion: ", reflect.TypeOf(result))
 		fmt.Println("resultado de insercion de insercion: ", result)
 	}
-	return json.NewEncoder(c.Response()).Encode(&user)
+	return c.JSON(http.StatusOK, &user)
 }
 
 func GetAllUsers(c echo.Context) error {
 
 	var users []models.User
-	var cursor *mongo.Cursor
-	ctx, ctxErr := context.WithTimeout(context.Background(), 15*time.Second)
-	if ctxErr != nil {
-		panic("Error al cargar contexto")
+
+	filter := bson.D{{"active", true}}
+	cursor, err := db.UserColl.Find(context.TODO(), filter)
+	if err != nil {
+		panic(err)
 	}
-	cursor.All(ctx, &users)
 
-	return json.NewEncoder(c.Response()).Encode(&users)
+	if err = cursor.All(context.TODO(), &users); err != nil {
+		panic(err)
+	}
+	return c.JSON(http.StatusOK, &users)
+}
 
+func GetUser(c echo.Context) error {
+	var user models.User
+	email := c.Param("email")
+	filter := bson.D{{"email", email}}
+	db.UserColl.FindOne(context.TODO(), filter).Decode(&user)
+
+	return c.JSON(http.StatusOK, &user)
 }
