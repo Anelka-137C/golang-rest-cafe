@@ -55,6 +55,16 @@ func GetUser(c echo.Context) error {
 	email := c.Param("email")
 	filter := bson.D{{"email", email}}
 	db.UserColl.FindOne(context.TODO(), filter).Decode(&user)
-
 	return c.JSON(http.StatusOK, &user)
+}
+
+func DeleteUser(c echo.Context) error {
+	msg := models.ResponseDelete{
+		Msg: "Registro eliminado con exito",
+	}
+	email := c.Param("email")
+	filter := bson.D{{"email", email}}
+	db.UserColl.DeleteOne(context.TODO(), filter)
+
+	return c.JSON(http.StatusOK, &msg)
 }

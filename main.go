@@ -13,10 +13,10 @@ func main() {
 	db.ConnectDB()
 	e := echo.New()
 	e.Use(middlewares.ValidateEmail)
+	e.Use()
 	e.POST("/users", routes.CreateUser)
-
 	e.GET("/users", routes.GetAllUsers)
-
 	e.GET("users/:email", routes.GetUser)
+	e.DELETE("users/:email", routes.DeleteUser)
 	e.Logger.Fatal(e.Start(":1323"))
 }
