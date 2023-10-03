@@ -1,6 +1,9 @@
 package user
 
-import "github.com/gin-gonic/gin"
+import (
+	"github.com/Anelka-137C/cafe-app/internal/domain"
+	"github.com/gin-gonic/gin"
+)
 
 type service struct {
 	repository Repository
@@ -9,7 +12,7 @@ type service struct {
 // CreateUser implements Service.
 
 type Service interface {
-	CreateUser(c *gin.Context)
+	CreateUser(c *gin.Context) domain.User
 }
 
 func NewService(r Repository) Service {
@@ -18,6 +21,6 @@ func NewService(r Repository) Service {
 	}
 }
 
-func (s *service) CreateUser(c *gin.Context) {
-	s.repository.CreateUser(c)
+func (s *service) CreateUser(c *gin.Context) domain.User {
+	return s.repository.CreateUser(c)
 }
