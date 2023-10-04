@@ -37,4 +37,6 @@ func (r *router) user() {
 	service := user.NewService(repo)
 	handler := handlers.NewUser(service)
 	group.POST("/create", handler.CreateUser())
+	group.GET("/get/:_id", handler.GetUser())
+	group.DELETE("/delete/:_id", handler.DeleteUser())
 }

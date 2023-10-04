@@ -7,3 +7,7 @@ type User struct {
 	Password string `json:"password" bson:"password"`
 	Active   bool   `json:"active" bson:"active"`
 }
+
+type Message struct {
+	Msg string `json:"msg"`
+}
