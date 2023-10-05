@@ -53,3 +53,14 @@ func (u *User) DeleteUser() gin.HandlerFunc {
 	}
 
 }
+
+func (u *User) UpdateUser() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		u.userService.UpdateUser(c)
+
+		c.JSON(http.StatusOK, domain.Message{
+			Msg: "Documen updated",
+		})
+	}
+
+}

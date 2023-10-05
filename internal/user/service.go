@@ -15,6 +15,7 @@ type Service interface {
 	CreateUser(c *gin.Context) domain.User
 	GetUser(c *gin.Context) domain.User
 	DeleteUser(c *gin.Context)
+	UpdateUser(c *gin.Context)
 }
 
 func NewService(r Repository) Service {
@@ -33,4 +34,8 @@ func (s *service) GetUser(c *gin.Context) domain.User {
 
 func (s *service) DeleteUser(c *gin.Context) {
 	s.repository.DeleteUser(c)
+}
+
+func (s *service) UpdateUser(c *gin.Context) {
+	s.repository.UpdateUser(c)
 }

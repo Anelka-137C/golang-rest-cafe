@@ -20,6 +20,7 @@ type Repository interface {
 	CreateUser(c *gin.Context) domain.User
 	GetUser(c *gin.Context) domain.User
 	DeleteUser(c *gin.Context)
+	UpdateUser(c *gin.Context)
 }
 
 func NewRepository(db *mongo.Client) Repository {
@@ -72,5 +73,28 @@ func (r *repository) DeleteUser(c *gin.Context) {
 	}
 	filter := bson.D{{Key: "_id", Value: objectId}}
 	userColl.DeleteOne(context.TODO(), filter)
+
+}
+
+func (r *repository) UpdateUser(c *gin.Context) {
+	dataBase := r.db.Database("GoCafe")
+	userColl := dataBase.Collection("users")
+	id := c.Param("_id")
+	objectId, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		log.Println("Invalid id")
+	}
+	user := domain.User{}
+	c.Bind(&user)
+	update := bson.D{{Key: "$set", Value: bson.D{
+		{Key: "name", Value: user.Name},
+		{Key: "email", Value: user.Email},
+		{Key: "role", Value: user.Role},
+		{Key: "password", Value: user.Password},
+		{Key: "active", Value: user.Active}}}}
+
+	filter := bson.D{{Key: "_id", Value: objectId}}
+
+	userColl.UpdateOne(context.TODO(), filter, update)
 
 }
