@@ -29,8 +29,15 @@ func Pong() func(c *gin.Context) {
 
 func (u *User) CreateUser() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		user := u.userService.CreateUser(c)
-		c.JSON(http.StatusOK, user)
+		user, err := u.userService.CreateUser(c)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{
+			"msg":  "User created",
+			"user": user,
+		})
 	}
 
 }

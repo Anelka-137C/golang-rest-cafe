@@ -1,11 +1,11 @@
 package domain
 
 type User struct {
-	Name     string `json:"name" bson:"name"`
-	Email    string `json:"email" bson:"email"`
-	Role     string `json:"role" bson:"role"`
-	Password string `json:"password" bson:"password"`
-	Active   bool   `json:"active" bson:"active"`
+	Name     string `json:"name" bson:"name" binding:"required,min=6"`
+	Email    string `json:"email" bson:"email" binding:"required,email"`
+	Role     string `json:"role" bson:"role" binding:"required"`
+	Password string `json:"password" bson:"password" binding:"required,min=7,max=10"`
+	Active   bool   `default:"true" json:"active" bson:"active"`
 }
 
 type Message struct {

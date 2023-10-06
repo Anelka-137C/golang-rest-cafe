@@ -17,7 +17,7 @@ type repository struct {
 }
 
 type Repository interface {
-	CreateUser(c *gin.Context) domain.User
+	CreateUser(c *gin.Context) (domain.User, error)
 	GetUser(c *gin.Context) domain.User
 	DeleteUser(c *gin.Context)
 	UpdateUser(c *gin.Context)
@@ -31,21 +31,22 @@ func NewRepository(db *mongo.Client) Repository {
 }
 
 // CreateUser implements Respository.
-func (r *repository) CreateUser(c *gin.Context) domain.User {
+func (r *repository) CreateUser(c *gin.Context) (domain.User, error) {
 
 	dataBase := r.db.Database("GoCafe")
 	userColl := dataBase.Collection("users")
 	newUser := domain.User{}
-	err := c.Bind(&newUser)
-	if err != nil {
-		fmt.Println(err)
 
+	err := c.ShouldBindJSON(&newUser)
+
+	if err != nil {
+		return newUser, err
 	}
 
 	fmt.Println(newUser)
 	userColl.InsertOne(context.TODO(), newUser)
 
-	return newUser
+	return newUser, nil
 }
 
 // GetUser implements Repository.
