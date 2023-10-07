@@ -13,9 +13,9 @@ type service struct {
 
 type Service interface {
 	CreateUser(c *gin.Context) (domain.User, error)
-	GetUser(c *gin.Context) domain.User
-	DeleteUser(c *gin.Context)
-	UpdateUser(c *gin.Context)
+	GetUser(c *gin.Context) (domain.User, error)
+	DeleteUser(c *gin.Context) error
+	UpdateUser(c *gin.Context) error
 }
 
 func NewService(r Repository) Service {
@@ -28,14 +28,14 @@ func (s *service) CreateUser(c *gin.Context) (domain.User, error) {
 	return s.repository.CreateUser(c)
 }
 
-func (s *service) GetUser(c *gin.Context) domain.User {
+func (s *service) GetUser(c *gin.Context) (domain.User, error) {
 	return s.repository.GetUser(c)
 }
 
-func (s *service) DeleteUser(c *gin.Context) {
-	s.repository.DeleteUser(c)
+func (s *service) DeleteUser(c *gin.Context) error {
+	return s.repository.DeleteUser(c)
 }
 
-func (s *service) UpdateUser(c *gin.Context) {
-	s.repository.UpdateUser(c)
+func (s *service) UpdateUser(c *gin.Context) error {
+	return s.repository.UpdateUser(c)
 }

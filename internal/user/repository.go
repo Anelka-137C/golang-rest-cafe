@@ -3,7 +3,6 @@ package user
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"github.com/Anelka-137C/cafe-app/internal/domain"
 	"github.com/gin-gonic/gin"
@@ -18,9 +17,9 @@ type repository struct {
 
 type Repository interface {
 	CreateUser(c *gin.Context) (domain.User, error)
-	GetUser(c *gin.Context) domain.User
-	DeleteUser(c *gin.Context)
-	UpdateUser(c *gin.Context)
+	GetUser(c *gin.Context) (domain.User, error)
+	DeleteUser(c *gin.Context) error
+	UpdateUser(c *gin.Context) error
 }
 
 func NewRepository(db *mongo.Client) Repository {
@@ -50,40 +49,40 @@ func (r *repository) CreateUser(c *gin.Context) (domain.User, error) {
 }
 
 // GetUser implements Repository.
-func (r *repository) GetUser(c *gin.Context) domain.User {
+func (r *repository) GetUser(c *gin.Context) (domain.User, error) {
 	dataBase := r.db.Database("GoCafe")
 	userColl := dataBase.Collection("users")
 	user := domain.User{}
 	id := c.Param("_id")
 	objectId, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		log.Println("Invalid id")
+		return user, err
 	}
 	filter := bson.D{{Key: "_id", Value: objectId}}
 	userColl.FindOne(context.TODO(), filter).Decode(&user)
-	return user
+	return user, nil
 }
 
-func (r *repository) DeleteUser(c *gin.Context) {
+func (r *repository) DeleteUser(c *gin.Context) error {
 	dataBase := r.db.Database("GoCafe")
 	userColl := dataBase.Collection("users")
 	id := c.Param("_id")
 	objectId, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		log.Println("Invalid id")
+		return err
 	}
 	filter := bson.D{{Key: "_id", Value: objectId}}
 	userColl.DeleteOne(context.TODO(), filter)
-
+	return nil
 }
 
-func (r *repository) UpdateUser(c *gin.Context) {
+func (r *repository) UpdateUser(c *gin.Context) error {
 	dataBase := r.db.Database("GoCafe")
 	userColl := dataBase.Collection("users")
 	id := c.Param("_id")
 	objectId, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		log.Println("Invalid id")
+		return err
 	}
 	user := domain.User{}
 	c.Bind(&user)
@@ -97,5 +96,5 @@ func (r *repository) UpdateUser(c *gin.Context) {
 	filter := bson.D{{Key: "_id", Value: objectId}}
 
 	userColl.UpdateOne(context.TODO(), filter, update)
-
+	return nil
 }

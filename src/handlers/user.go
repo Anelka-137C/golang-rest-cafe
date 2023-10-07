@@ -44,18 +44,28 @@ func (u *User) CreateUser() gin.HandlerFunc {
 
 func (u *User) GetUser() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		user := u.userService.GetUser(c)
-		c.JSON(http.StatusOK, user)
+		user, err := u.userService.GetUser(c)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{
+			"msg":  "User successfully obtained ",
+			"user": user,
+		})
 	}
 
 }
 
 func (u *User) DeleteUser() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		u.userService.DeleteUser(c)
-
+		err := u.userService.DeleteUser(c)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusOK, domain.Message{
-			Msg: "Documen deleted",
+			Msg: "User deleted",
 		})
 	}
 
@@ -63,10 +73,12 @@ func (u *User) DeleteUser() gin.HandlerFunc {
 
 func (u *User) UpdateUser() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		u.userService.UpdateUser(c)
-
+		err := u.userService.UpdateUser(c)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		}
 		c.JSON(http.StatusOK, domain.Message{
-			Msg: "Documen updated",
+			Msg: "User updated",
 		})
 	}
 
