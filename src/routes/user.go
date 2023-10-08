@@ -3,7 +3,10 @@ package routes
 import (
 	"github.com/Anelka-137C/cafe-app/internal/user"
 	"github.com/Anelka-137C/cafe-app/src/handlers"
+	"github.com/Anelka-137C/cafe-app/src/middlewares"
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
+	"github.com/go-playground/validator/v10"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -32,10 +35,14 @@ func (r *router) setGroup() {
 }
 
 func (r *router) user() {
+
 	group := r.rg.Group("/user")
 	repo := user.NewRepository(r.db)
 	service := user.NewService(repo)
 	handler := handlers.NewUser(service)
+	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
+		v.RegisterValidation("validateEmail", middlewares.ValidateEmail(repo))
+	}
 	group.POST("/create", handler.CreateUser())
 	group.GET("/get/:_id", handler.GetUser())
 	group.DELETE("/delete/:_id", handler.DeleteUser())

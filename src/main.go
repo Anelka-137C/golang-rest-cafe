@@ -16,6 +16,7 @@ import (
 const mongoUrl = "MONGODB_URI"
 
 func main() {
+
 	eng := gin.Default()
 	err := godotenv.Load()
 	if err != nil {
