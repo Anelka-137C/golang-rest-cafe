@@ -2,13 +2,13 @@ package user
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/Anelka-137C/cafe-app/internal/domain"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type repository struct {
@@ -43,7 +43,9 @@ func (r *repository) CreateUser(c *gin.Context) (domain.User, error) {
 		return newUser, err
 	}
 
-	fmt.Println(newUser)
+	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(newUser.Password), 9)
+	newUser.Password = string(hashedPassword)
+
 	userColl.InsertOne(context.TODO(), newUser)
 
 	return newUser, nil

@@ -3,9 +3,16 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/Anelka-137C/cafe-app/internal/domain"
 	"github.com/Anelka-137C/cafe-app/internal/user"
+	"github.com/Anelka-137C/cafe-app/src/util"
 	"github.com/gin-gonic/gin"
+)
+
+const (
+	creationMessage = "User successfully created"
+	getMessage      = "User successfully obtained"
+	deleteMesage    = "User successfully delected"
+	updateMessage   = "User successfully updated"
 )
 
 type User struct {
@@ -34,12 +41,8 @@ func (u *User) CreateUser() gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusOK, gin.H{
-			"msg":  "User created",
-			"user": user,
-		})
+		util.BuildResponse(http.StatusOK, user, creationMessage, c)
 	}
-
 }
 
 func (u *User) GetUser() gin.HandlerFunc {
@@ -49,10 +52,7 @@ func (u *User) GetUser() gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusOK, gin.H{
-			"msg":  "User successfully obtained ",
-			"user": user,
-		})
+		util.BuildResponse(http.StatusOK, user, getMessage, c)
 	}
 
 }
@@ -64,9 +64,7 @@ func (u *User) DeleteUser() gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusOK, domain.Message{
-			Msg: "User deleted",
-		})
+		util.BuildResponse(http.StatusOK, nil, deleteMesage, c)
 	}
 
 }
@@ -77,9 +75,6 @@ func (u *User) UpdateUser() gin.HandlerFunc {
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		}
-		c.JSON(http.StatusOK, domain.Message{
-			Msg: "User updated",
-		})
+		util.BuildResponse(http.StatusOK, nil, updateMessage, c)
 	}
-
 }
