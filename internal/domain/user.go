@@ -22,3 +22,8 @@ type UserResponse struct {
 type Message struct {
 	Msg string `json:"msg"`
 }
+
+type ErrorMsg struct {
+	Field   string `json:"field"`
+	Message string `json:"message"`
+}

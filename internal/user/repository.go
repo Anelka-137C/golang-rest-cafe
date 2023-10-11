@@ -2,9 +2,13 @@ package user
 
 import (
 	"context"
+	"errors"
+	"net/http"
 
 	"github.com/Anelka-137C/cafe-app/internal/domain"
+	"github.com/Anelka-137C/cafe-app/src/helpers"
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -37,16 +41,21 @@ func (r *repository) CreateUser(c *gin.Context) (domain.User, error) {
 	userColl := dataBase.Collection("users")
 	newUser := domain.User{}
 
-	err := c.ShouldBindJSON(&newUser)
+	if err := c.ShouldBindJSON(&newUser); err != nil {
 
-	if err != nil {
-		return newUser, err
+		var ve validator.ValidationErrors
+		if errors.As(err, &ve) {
+			out := make([]domain.ErrorMsg, len(ve))
+			for i, fe := range ve {
+				out[i] = domain.ErrorMsg{Field: fe.Field(), Message: helpers.GetErrorMsg(fe)}
+			}
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"errors": out})
+		} else {
+			hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(newUser.Password), 9)
+			newUser.Password = string(hashedPassword)
+			userColl.InsertOne(context.TODO(), newUser)
+		}
 	}
-
-	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(newUser.Password), 9)
-	newUser.Password = string(hashedPassword)
-
-	userColl.InsertOne(context.TODO(), newUser)
 
 	return newUser, nil
 }
