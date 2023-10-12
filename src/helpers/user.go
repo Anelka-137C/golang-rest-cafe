@@ -10,6 +10,9 @@ func GetErrorMsg(fe validator.FieldError) string {
 		return "Should be less than " + fe.Param()
 	case "gte":
 		return "Should be greater than " + fe.Param()
+	case "validateEmail":
+		return "The email address is registered" + fe.Param()
 	}
+
 	return "Unknown error"
 }

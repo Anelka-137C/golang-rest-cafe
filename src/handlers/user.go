@@ -38,7 +38,7 @@ func (u *User) CreateUser() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		user, err := u.userService.CreateUser(c)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			util.BuildBadResponse(http.StatusBadRequest, err, c)
 			return
 		}
 		util.BuildResponse(http.StatusOK, user, creationMessage, c)

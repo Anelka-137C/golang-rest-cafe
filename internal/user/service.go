@@ -12,7 +12,7 @@ type service struct {
 // CreateUser implements Service.
 
 type Service interface {
-	CreateUser(c *gin.Context) (domain.User, error)
+	CreateUser(c *gin.Context) (domain.User, []domain.ErrorMsg)
 	GetUser(c *gin.Context) (domain.User, error)
 	DeleteUser(c *gin.Context) error
 	UpdateUser(c *gin.Context) error
@@ -24,7 +24,7 @@ func NewService(r Repository) Service {
 	}
 }
 
-func (s *service) CreateUser(c *gin.Context) (domain.User, error) {
+func (s *service) CreateUser(c *gin.Context) (domain.User, []domain.ErrorMsg) {
 	return s.repository.CreateUser(c)
 }
 

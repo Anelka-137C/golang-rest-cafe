@@ -3,7 +3,6 @@ package user
 import (
 	"context"
 	"errors"
-	"net/http"
 
 	"github.com/Anelka-137C/cafe-app/internal/domain"
 	"github.com/Anelka-137C/cafe-app/src/helpers"
@@ -20,7 +19,7 @@ type repository struct {
 }
 
 type Repository interface {
-	CreateUser(c *gin.Context) (domain.User, error)
+	CreateUser(c *gin.Context) (domain.User, []domain.ErrorMsg)
 	GetUser(c *gin.Context) (domain.User, error)
 	DeleteUser(c *gin.Context) error
 	UpdateUser(c *gin.Context) error
@@ -35,7 +34,7 @@ func NewRepository(db *mongo.Client) Repository {
 }
 
 // CreateUser implements Respository.
-func (r *repository) CreateUser(c *gin.Context) (domain.User, error) {
+func (r *repository) CreateUser(c *gin.Context) (domain.User, []domain.ErrorMsg) {
 
 	dataBase := r.db.Database("GoCafe")
 	userColl := dataBase.Collection("users")
@@ -49,12 +48,12 @@ func (r *repository) CreateUser(c *gin.Context) (domain.User, error) {
 			for i, fe := range ve {
 				out[i] = domain.ErrorMsg{Field: fe.Field(), Message: helpers.GetErrorMsg(fe)}
 			}
-			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"errors": out})
-		} else {
-			hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(newUser.Password), 9)
-			newUser.Password = string(hashedPassword)
-			userColl.InsertOne(context.TODO(), newUser)
+			return newUser, out
 		}
+	} else {
+		hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(newUser.Password), 9)
+		newUser.Password = string(hashedPassword)
+		userColl.InsertOne(context.TODO(), newUser)
 	}
 
 	return newUser, nil
