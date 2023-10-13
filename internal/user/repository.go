@@ -24,6 +24,7 @@ type Repository interface {
 	DeleteUser(c *gin.Context) error
 	UpdateUser(c *gin.Context) error
 	ValidateEmail(email string) bool
+	ValidateRole(role string) bool
 }
 
 func NewRepository(db *mongo.Client) Repository {
@@ -105,7 +106,6 @@ func (r *repository) UpdateUser(c *gin.Context) error {
 		{Key: "active", Value: user.Active}}}}
 
 	filter := bson.D{{Key: "_id", Value: objectId}}
-
 	userColl.UpdateOne(context.TODO(), filter, update)
 	return nil
 }
@@ -116,6 +116,14 @@ func (r *repository) ValidateEmail(email string) bool {
 	user := domain.UserResponse{}
 	filter := bson.D{{Key: "email", Value: email}}
 	userColl.FindOne(context.TODO(), filter).Decode(&user)
-
 	return user.ID.IsZero()
+}
+
+func (r *repository) ValidateRole(role string) bool {
+	dataBase := r.db.Database("GoCafe")
+	userColl := dataBase.Collection("roles")
+	user := domain.UserResponse{}
+	filter := bson.D{{Key: "role", Value: role}}
+	userColl.FindOne(context.TODO(), filter).Decode(&user)
+	return !user.ID.IsZero()
 }
