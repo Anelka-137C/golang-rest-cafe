@@ -14,15 +14,21 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+const (
+	dataBase        = "GoCafe"
+	userCollection  = "users"
+	rolesCollection = "roles"
+)
+
 type repository struct {
 	db *mongo.Client
 }
 
 type Repository interface {
 	CreateUser(c *gin.Context) (domain.User, []domain.ErrorMsg)
-	GetUser(c *gin.Context) (domain.User, error)
-	DeleteUser(c *gin.Context) error
-	UpdateUser(c *gin.Context) error
+	GetUser(c *gin.Context) (domain.UserResponse, []domain.ErrorMsg)
+	DeleteUser(c *gin.Context) []domain.ErrorMsg
+	UpdateUser(c *gin.Context) []domain.ErrorMsg
 	ValidateEmail(email string) bool
 	ValidateRole(role string) bool
 }
@@ -37,8 +43,8 @@ func NewRepository(db *mongo.Client) Repository {
 // CreateUser implements Respository.
 func (r *repository) CreateUser(c *gin.Context) (domain.User, []domain.ErrorMsg) {
 
-	dataBase := r.db.Database("GoCafe")
-	userColl := dataBase.Collection("users")
+	dataBase := r.db.Database(dataBase)
+	userColl := dataBase.Collection(userCollection)
 	newUser := domain.User{}
 
 	if err := c.ShouldBindJSON(&newUser); err != nil {
@@ -61,43 +67,82 @@ func (r *repository) CreateUser(c *gin.Context) (domain.User, []domain.ErrorMsg)
 }
 
 // GetUser implements Repository.
-func (r *repository) GetUser(c *gin.Context) (domain.User, error) {
-	dataBase := r.db.Database("GoCafe")
-	userColl := dataBase.Collection("users")
-	user := domain.User{}
+func (r *repository) GetUser(c *gin.Context) (domain.UserResponse, []domain.ErrorMsg) {
+	dataBase := r.db.Database(dataBase)
+	userColl := dataBase.Collection(userCollection)
+	user := domain.UserResponse{}
+	errorMsg := make([]domain.ErrorMsg, 1)
 	id := c.Param("_id")
 	objectId, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		return user, err
+		errorMsg[0].Field = "id"
+		errorMsg[0].Message = "The id is not a mongo id"
+		return user, errorMsg
 	}
 	filter := bson.D{{Key: "_id", Value: objectId}}
 	userColl.FindOne(context.TODO(), filter).Decode(&user)
+	if user.ID.IsZero() {
+		errorMsg[0].Field = "id"
+		errorMsg[0].Message = "The user is not in data base"
+		return user, errorMsg
+	}
 	return user, nil
 }
 
-func (r *repository) DeleteUser(c *gin.Context) error {
-	dataBase := r.db.Database("GoCafe")
-	userColl := dataBase.Collection("users")
+func (r *repository) DeleteUser(c *gin.Context) []domain.ErrorMsg {
+	dataBase := r.db.Database(dataBase)
+	userColl := dataBase.Collection(userCollection)
 	id := c.Param("_id")
+	errorMsg := make([]domain.ErrorMsg, 1)
 	objectId, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		return err
+		errorMsg[0].Field = "id"
+		errorMsg[0].Message = "The id is not a mongo id"
+		return errorMsg
 	}
 	filter := bson.D{{Key: "_id", Value: objectId}}
-	userColl.DeleteOne(context.TODO(), filter)
+	_, err = userColl.DeleteOne(context.TODO(), filter)
+	if err != nil {
+		errorMsg[0].Field = "id"
+		errorMsg[0].Message = "Error at the moment to delete"
+		return errorMsg
+	}
+
 	return nil
 }
 
-func (r *repository) UpdateUser(c *gin.Context) error {
-	dataBase := r.db.Database("GoCafe")
-	userColl := dataBase.Collection("users")
+func (r *repository) UpdateUser(c *gin.Context) []domain.ErrorMsg {
+	dataBase := r.db.Database(dataBase)
+	userColl := dataBase.Collection(userCollection)
+	errorMsg := make([]domain.ErrorMsg, 1)
 	id := c.Param("_id")
 	objectId, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		return err
+		errorMsg[0].Field = "id"
+		errorMsg[0].Message = "The id is not a mongo id"
+		return errorMsg
 	}
+	auxUser := domain.UserResponse{}
+
+	filter := bson.D{{Key: "_id", Value: objectId}}
+	userColl.FindOne(context.TODO(), filter).Decode(&auxUser)
+	if auxUser.ID.IsZero() {
+		errorMsg[0].Field = "id"
+		errorMsg[0].Message = "The user is not in data base"
+		return errorMsg
+	}
+
 	user := domain.User{}
-	c.Bind(&user)
+	if err := c.ShouldBindJSON(&user); err != nil {
+		var ve validator.ValidationErrors
+		if errors.As(err, &ve) {
+			out := make([]domain.ErrorMsg, len(ve))
+			for i, fe := range ve {
+				out[i] = domain.ErrorMsg{Field: fe.Field(), Message: helpers.GetErrorMsg(fe)}
+			}
+			return out
+		}
+	}
 	update := bson.D{{Key: "$set", Value: bson.D{
 		{Key: "name", Value: user.Name},
 		{Key: "email", Value: user.Email},
@@ -105,14 +150,18 @@ func (r *repository) UpdateUser(c *gin.Context) error {
 		{Key: "password", Value: user.Password},
 		{Key: "active", Value: user.Active}}}}
 
-	filter := bson.D{{Key: "_id", Value: objectId}}
-	userColl.UpdateOne(context.TODO(), filter, update)
+	_, err = userColl.UpdateOne(context.TODO(), filter, update)
+	if err != nil {
+		errorMsg[0].Field = "id"
+		errorMsg[0].Message = "Error at the moment to update"
+		return errorMsg
+	}
 	return nil
 }
 
 func (r *repository) ValidateEmail(email string) bool {
-	dataBase := r.db.Database("GoCafe")
-	userColl := dataBase.Collection("users")
+	dataBase := r.db.Database(dataBase)
+	userColl := dataBase.Collection(userCollection)
 	user := domain.UserResponse{}
 	filter := bson.D{{Key: "email", Value: email}}
 	userColl.FindOne(context.TODO(), filter).Decode(&user)
@@ -120,8 +169,8 @@ func (r *repository) ValidateEmail(email string) bool {
 }
 
 func (r *repository) ValidateRole(role string) bool {
-	dataBase := r.db.Database("GoCafe")
-	userColl := dataBase.Collection("roles")
+	dataBase := r.db.Database(dataBase)
+	userColl := dataBase.Collection(rolesCollection)
 	user := domain.UserResponse{}
 	filter := bson.D{{Key: "role", Value: role}}
 	userColl.FindOne(context.TODO(), filter).Decode(&user)

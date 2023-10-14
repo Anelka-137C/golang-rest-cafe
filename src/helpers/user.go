@@ -18,6 +18,8 @@ func GetErrorMsg(fe validator.FieldError) string {
 		return "The email " + fmt.Sprintf("%s", fe.Value()) + " is registered"
 	case "validateRole":
 		return "The Role " + fmt.Sprintf("%s", fe.Value()) + " is not defined in data base"
+	case "email":
+		return "The format of " + fmt.Sprintf("%s", fe.Value()) + "does not correspond to an email address"
 	}
 
 	return "Unknown error"
