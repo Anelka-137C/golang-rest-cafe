@@ -71,21 +71,18 @@ func (r *repository) GetUser(c *gin.Context) (domain.UserResponse, []domain.Erro
 	dataBase := r.db.Database(dataBase)
 	userColl := dataBase.Collection(userCollection)
 	user := domain.UserResponse{}
-	errorMsg := make([]domain.ErrorMsg, 1)
+
 	id := c.Param("_id")
 	objectId, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		errorMsg[0].Field = "id"
-		errorMsg[0].Message = "The id is not a mongo id"
-		return user, errorMsg
+		return user, helpers.GenerateOneError("id", "The id is not a mongo id")
 	}
 	filter := bson.D{{Key: "_id", Value: objectId}}
 	userColl.FindOne(context.TODO(), filter).Decode(&user)
 	if user.ID.IsZero() {
-		errorMsg[0].Field = "id"
-		errorMsg[0].Message = "The user is not in data base"
-		return user, errorMsg
+		return user, helpers.GenerateOneError("id", "The user is not in data base")
 	}
+
 	return user, nil
 }
 
@@ -93,19 +90,15 @@ func (r *repository) DeleteUser(c *gin.Context) []domain.ErrorMsg {
 	dataBase := r.db.Database(dataBase)
 	userColl := dataBase.Collection(userCollection)
 	id := c.Param("_id")
-	errorMsg := make([]domain.ErrorMsg, 1)
+
 	objectId, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		errorMsg[0].Field = "id"
-		errorMsg[0].Message = "The id is not a mongo id"
-		return errorMsg
+		return helpers.GenerateOneError("id", "The id is not a mongo id")
 	}
 	filter := bson.D{{Key: "_id", Value: objectId}}
 	_, err = userColl.DeleteOne(context.TODO(), filter)
 	if err != nil {
-		errorMsg[0].Field = "id"
-		errorMsg[0].Message = "Error at the moment to delete"
-		return errorMsg
+		return helpers.GenerateOneError("id", "Error at the moment to delete")
 	}
 
 	return nil
@@ -114,34 +107,22 @@ func (r *repository) DeleteUser(c *gin.Context) []domain.ErrorMsg {
 func (r *repository) UpdateUser(c *gin.Context) []domain.ErrorMsg {
 	dataBase := r.db.Database(dataBase)
 	userColl := dataBase.Collection(userCollection)
-	errorMsg := make([]domain.ErrorMsg, 1)
 	id := c.Param("_id")
 	objectId, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		errorMsg[0].Field = "id"
-		errorMsg[0].Message = "The id is not a mongo id"
-		return errorMsg
+		return helpers.GenerateOneError("id", "The id is not a mongo id")
 	}
 	auxUser := domain.UserResponse{}
 
 	filter := bson.D{{Key: "_id", Value: objectId}}
 	userColl.FindOne(context.TODO(), filter).Decode(&auxUser)
 	if auxUser.ID.IsZero() {
-		errorMsg[0].Field = "id"
-		errorMsg[0].Message = "The user is not in data base"
-		return errorMsg
+		return helpers.GenerateOneError("id", "The user is not in data base")
 	}
 
 	user := domain.User{}
 	if err := c.ShouldBindJSON(&user); err != nil {
-		var ve validator.ValidationErrors
-		if errors.As(err, &ve) {
-			out := make([]domain.ErrorMsg, len(ve))
-			for i, fe := range ve {
-				out[i] = domain.ErrorMsg{Field: fe.Field(), Message: helpers.GetErrorMsg(fe)}
-			}
-			return out
-		}
+		return helpers.GenerateMultipleErrorMsg(err)
 	}
 	update := bson.D{{Key: "$set", Value: bson.D{
 		{Key: "name", Value: user.Name},
@@ -152,9 +133,7 @@ func (r *repository) UpdateUser(c *gin.Context) []domain.ErrorMsg {
 
 	_, err = userColl.UpdateOne(context.TODO(), filter, update)
 	if err != nil {
-		errorMsg[0].Field = "id"
-		errorMsg[0].Message = "Error at the moment to update"
-		return errorMsg
+		return helpers.GenerateOneError("id", "Error at the moment to update")
 	}
 	return nil
 }

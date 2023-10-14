@@ -19,10 +19,6 @@ type UserResponse struct {
 	Active   bool               `default:"true" json:"active" bson:"active"`
 }
 
-type Message struct {
-	Msg string `json:"msg"`
-}
-
 type ErrorMsg struct {
 	Field   string `json:"field"`
 	Message string `json:"message"`
