@@ -42,9 +42,12 @@ func (r *router) user() {
 	handler := handlers.NewUser(service)
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
 		v.RegisterValidation("validateEmail", middlewares.ValidateEmail(repo))
+		v.RegisterValidation("validateRole", middlewares.ValidateRole(repo))
+		v.RegisterValidation("validateIfExistEmail", middlewares.ValidateIfExistEmail(repo))
 	}
 	group.POST("/create", handler.CreateUser())
 	group.GET("/get/:_id", handler.GetUser())
 	group.DELETE("/delete/:_id", handler.DeleteUser())
 	group.PUT("/update/:_id", handler.UpdateUser())
+	group.POST("/login", handler.Login())
 }

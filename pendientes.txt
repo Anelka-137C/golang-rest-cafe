@@ -1,3 +1,1 @@
-Buscar la manera de que mande el id mongo
-
-Buscar la manera de poder mandar los errores de cada uno de los campos a validar en una estructura json
+Buscar la manera de que el activado sea true: Actiar por medio de un correo

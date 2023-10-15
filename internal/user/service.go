@@ -12,10 +12,11 @@ type service struct {
 // CreateUser implements Service.
 
 type Service interface {
-	CreateUser(c *gin.Context) (domain.User, error)
-	GetUser(c *gin.Context) (domain.User, error)
-	DeleteUser(c *gin.Context) error
-	UpdateUser(c *gin.Context) error
+	CreateUser(c *gin.Context) (domain.User, []domain.ErrorMsg)
+	GetUser(c *gin.Context) (domain.UserResponse, []domain.ErrorMsg)
+	DeleteUser(c *gin.Context) []domain.ErrorMsg
+	UpdateUser(c *gin.Context) []domain.ErrorMsg
+	Login(c *gin.Context) (domain.LoginResponse, []domain.ErrorMsg)
 }
 
 func NewService(r Repository) Service {
@@ -24,18 +25,22 @@ func NewService(r Repository) Service {
 	}
 }
 
-func (s *service) CreateUser(c *gin.Context) (domain.User, error) {
+func (s *service) CreateUser(c *gin.Context) (domain.User, []domain.ErrorMsg) {
 	return s.repository.CreateUser(c)
 }
 
-func (s *service) GetUser(c *gin.Context) (domain.User, error) {
+func (s *service) GetUser(c *gin.Context) (domain.UserResponse, []domain.ErrorMsg) {
 	return s.repository.GetUser(c)
 }
 
-func (s *service) DeleteUser(c *gin.Context) error {
+func (s *service) DeleteUser(c *gin.Context) []domain.ErrorMsg {
 	return s.repository.DeleteUser(c)
 }
 
-func (s *service) UpdateUser(c *gin.Context) error {
+func (s *service) UpdateUser(c *gin.Context) []domain.ErrorMsg {
 	return s.repository.UpdateUser(c)
+}
+
+func (s *service) Login(c *gin.Context) (domain.LoginResponse, []domain.ErrorMsg) {
+	return s.repository.Login(c)
 }

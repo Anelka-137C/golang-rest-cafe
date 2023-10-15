@@ -6,9 +6,22 @@ import (
 )
 
 func ValidateEmail(db user.Repository) validator.Func {
-
 	return func(fl validator.FieldLevel) bool {
 		email := fl.Field().String()
 		return db.ValidateEmail(email)
+	}
+}
+
+func ValidateRole(db user.Repository) validator.Func {
+	return func(fl validator.FieldLevel) bool {
+		role := fl.Field().String()
+		return db.ValidateRole(role)
+	}
+}
+
+func ValidateIfExistEmail(db user.Repository) validator.Func {
+	return func(fl validator.FieldLevel) bool {
+		email := fl.Field().String()
+		return !db.ValidateEmail(email)
 	}
 }
