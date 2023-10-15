@@ -23,3 +23,12 @@ type ErrorMsg struct {
 	Field   string `json:"field"`
 	Message string `json:"message"`
 }
+
+type Login struct {
+	Email    string `json:"email" bson:"email" binding:"required,validateIfExistEmail,email"`
+	Password string `json:"password" bson:"password" binding:"required"`
+}
+
+type LoginResponse struct {
+	Jwt string
+}

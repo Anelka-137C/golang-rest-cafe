@@ -16,6 +16,7 @@ type Service interface {
 	GetUser(c *gin.Context) (domain.UserResponse, []domain.ErrorMsg)
 	DeleteUser(c *gin.Context) []domain.ErrorMsg
 	UpdateUser(c *gin.Context) []domain.ErrorMsg
+	Login(c *gin.Context) (domain.LoginResponse, []domain.ErrorMsg)
 }
 
 func NewService(r Repository) Service {
@@ -38,4 +39,8 @@ func (s *service) DeleteUser(c *gin.Context) []domain.ErrorMsg {
 
 func (s *service) UpdateUser(c *gin.Context) []domain.ErrorMsg {
 	return s.repository.UpdateUser(c)
+}
+
+func (s *service) Login(c *gin.Context) (domain.LoginResponse, []domain.ErrorMsg) {
+	return s.repository.Login(c)
 }

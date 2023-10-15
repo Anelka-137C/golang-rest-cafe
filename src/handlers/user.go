@@ -79,3 +79,14 @@ func (u *User) UpdateUser() gin.HandlerFunc {
 		util.BuildResponse(http.StatusOK, nil, updateMessage, c)
 	}
 }
+
+func (u *User) Login() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		jwt, err := u.userService.Login(c)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err})
+			return
+		}
+		util.BuildResponse(http.StatusOK, jwt, updateMessage, c)
+	}
+}

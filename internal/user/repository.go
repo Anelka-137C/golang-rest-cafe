@@ -3,11 +3,16 @@ package user
 import (
 	"context"
 	"errors"
+	"log"
+	"os"
+	"time"
 
 	"github.com/Anelka-137C/cafe-app/internal/domain"
 	"github.com/Anelka-137C/cafe-app/src/helpers"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -18,6 +23,7 @@ const (
 	dataBase        = "GoCafe"
 	userCollection  = "users"
 	rolesCollection = "roles"
+	secretKey       = "SECRET_KEY"
 )
 
 type repository struct {
@@ -29,6 +35,7 @@ type Repository interface {
 	GetUser(c *gin.Context) (domain.UserResponse, []domain.ErrorMsg)
 	DeleteUser(c *gin.Context) []domain.ErrorMsg
 	UpdateUser(c *gin.Context) []domain.ErrorMsg
+	Login(c *gin.Context) (domain.LoginResponse, []domain.ErrorMsg)
 	ValidateEmail(email string) bool
 	ValidateRole(role string) bool
 }
@@ -58,7 +65,7 @@ func (r *repository) CreateUser(c *gin.Context) (domain.User, []domain.ErrorMsg)
 			return newUser, out
 		}
 	} else {
-		hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(newUser.Password), 9)
+		hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(newUser.Password), 10)
 		newUser.Password = string(hashedPassword)
 		userColl.InsertOne(context.TODO(), newUser)
 	}
@@ -154,4 +161,37 @@ func (r *repository) ValidateRole(role string) bool {
 	filter := bson.D{{Key: "role", Value: role}}
 	userColl.FindOne(context.TODO(), filter).Decode(&user)
 	return !user.ID.IsZero()
+}
+
+func (r *repository) Login(c *gin.Context) (domain.LoginResponse, []domain.ErrorMsg) {
+	dataBase := r.db.Database(dataBase)
+	userColl := dataBase.Collection(userCollection)
+	user := domain.UserResponse{}
+	loginResponse := domain.LoginResponse{}
+	err := godotenv.Load()
+	login := domain.Login{}
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+	sampleSecretKey := os.Getenv(secretKey)
+	if err = c.ShouldBindJSON(&login); err != nil {
+		return loginResponse, helpers.GenerateMultipleErrorMsg(err)
+	}
+	filter := bson.D{{Key: "email", Value: login.Email}}
+	userColl.FindOne(context.TODO(), filter).Decode(&user)
+
+	if err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(login.Password)); err != nil {
+		return loginResponse, helpers.GenerateOneError("password", "The password is not correct")
+	}
+	token := jwt.New(jwt.SigningMethodHS256)
+	claims := token.Claims.(jwt.MapClaims)
+	claims["exp"] = time.Now().Add(10 * time.Minute)
+	claims["authorized"] = true
+	claims["user"] = user.ID
+	claims["role"] = user.Role
+
+	tokenString, _ := token.SignedString([]byte(sampleSecretKey))
+	loginResponse.Jwt = tokenString
+
+	return loginResponse, nil
 }

@@ -37,6 +37,8 @@ func GetErrorMsg(fe validator.FieldError) string {
 		return "Should be less than " + fe.Param()
 	case "max":
 		return "Should be greater than " + fe.Param()
+	case "validateIfExistEmail":
+		return "The email " + fmt.Sprintf("%s", fe.Value()) + " is not registered"
 	}
 
 	return "Unknown error"

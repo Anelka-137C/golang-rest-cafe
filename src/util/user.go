@@ -6,16 +6,27 @@ import (
 )
 
 func BuildResponse(status int, object interface{}, message string, c *gin.Context) {
-	if object != nil {
+
+	switch object.(type) {
+	case domain.LoginResponse:
 		c.JSON(status, gin.H{
-			"msg":  message,
-			"user": object,
+			"token": object,
 		})
-	} else {
-		c.JSON(status, gin.H{
-			"msg": message,
-		})
+		return
+	default:
+		if object != nil {
+			c.JSON(status, gin.H{
+				"msg":  message,
+				"user": object,
+			})
+		} else {
+			c.JSON(status, gin.H{
+				"msg": message,
+			})
+		}
+		return
 	}
+
 }
 
 func BuildBadResponse(status int, err []domain.ErrorMsg, c *gin.Context) {
