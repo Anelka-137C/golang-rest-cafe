@@ -45,9 +45,10 @@ func (r *router) user() {
 		v.RegisterValidation("validateRole", middlewares.ValidateRole(repo))
 		v.RegisterValidation("validateIfExistEmail", middlewares.ValidateIfExistEmail(repo))
 	}
-	group.POST("/create", handler.CreateUser())
-	group.GET("/get/:_id", handler.GetUser())
-	group.DELETE("/delete/:_id", handler.DeleteUser())
-	group.PUT("/update/:_id", handler.UpdateUser())
+	group.POST("/create", middlewares.ValidateJwt(), handler.CreateUser())
+	group.GET("/get/:_id", middlewares.ValidateJwt(), handler.GetUser())
+	group.GET("/getEmail", middlewares.ValidateJwt(), handler.GetUserByEmail())
+	group.DELETE("/delete/:_id", middlewares.ValidateJwt(), handler.DeleteUser())
+	group.PUT("/update/:_id", middlewares.ValidateJwt(), handler.UpdateUser())
 	group.POST("/login", handler.Login())
 }

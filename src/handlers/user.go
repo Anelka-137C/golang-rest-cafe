@@ -57,6 +57,18 @@ func (u *User) GetUser() gin.HandlerFunc {
 
 }
 
+func (u *User) GetUserByEmail() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		user, err := u.userService.GetUserByEmail(c)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err})
+			return
+		}
+		util.BuildResponse(http.StatusOK, user, getMessage, c)
+	}
+
+}
+
 func (u *User) DeleteUser() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		err := u.userService.DeleteUser(c)

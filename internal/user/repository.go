@@ -33,6 +33,7 @@ type repository struct {
 type Repository interface {
 	CreateUser(c *gin.Context) (domain.User, []domain.ErrorMsg)
 	GetUser(c *gin.Context) (domain.UserResponse, []domain.ErrorMsg)
+	GetUserByEmail(c *gin.Context) (domain.UserResponse, []domain.ErrorMsg)
 	DeleteUser(c *gin.Context) []domain.ErrorMsg
 	UpdateUser(c *gin.Context) []domain.ErrorMsg
 	Login(c *gin.Context) (domain.LoginResponse, []domain.ErrorMsg)
@@ -88,6 +89,25 @@ func (r *repository) GetUser(c *gin.Context) (domain.UserResponse, []domain.Erro
 	userColl.FindOne(context.TODO(), filter).Decode(&user)
 	if user.ID.IsZero() {
 		return user, helpers.GenerateOneError("id", "The user is not in data base")
+	}
+
+	return user, nil
+}
+
+func (r *repository) GetUserByEmail(c *gin.Context) (domain.UserResponse, []domain.ErrorMsg) {
+	dataBase := r.db.Database(dataBase)
+	userColl := dataBase.Collection(userCollection)
+
+	user := domain.UserResponse{}
+	email := c.Query("email")
+	if email == "" {
+		return user, helpers.GenerateOneError("email", "The param is empty")
+	}
+
+	filter := bson.D{{Key: "email", Value: email}}
+	userColl.FindOne(context.TODO(), filter).Decode(&user)
+	if user.ID.IsZero() {
+		return user, helpers.GenerateOneError("email", "The user is not in data base")
 	}
 
 	return user, nil
@@ -168,8 +188,8 @@ func (r *repository) Login(c *gin.Context) (domain.LoginResponse, []domain.Error
 	userColl := dataBase.Collection(userCollection)
 	user := domain.UserResponse{}
 	loginResponse := domain.LoginResponse{}
-	err := godotenv.Load()
 	login := domain.Login{}
+	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
@@ -183,15 +203,15 @@ func (r *repository) Login(c *gin.Context) (domain.LoginResponse, []domain.Error
 	if err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(login.Password)); err != nil {
 		return loginResponse, helpers.GenerateOneError("password", "The password is not correct")
 	}
+
 	token := jwt.New(jwt.SigningMethodHS256)
 	claims := token.Claims.(jwt.MapClaims)
-	claims["exp"] = time.Now().Add(10 * time.Minute)
+	claims["exp"] = time.Now().Add(10 * time.Minute).Local().UnixMilli()
 	claims["authorized"] = true
 	claims["user"] = user.ID
 	claims["role"] = user.Role
 
 	tokenString, _ := token.SignedString([]byte(sampleSecretKey))
 	loginResponse.Jwt = tokenString
-
 	return loginResponse, nil
 }
