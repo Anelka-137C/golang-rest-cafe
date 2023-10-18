@@ -25,15 +25,6 @@ func NewUser(u user.Service) *User {
 	}
 }
 
-func Pong() func(c *gin.Context) {
-
-	return func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "pong",
-		})
-	}
-}
-
 func (u *User) CreateUser() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		user, err := u.userService.CreateUser(c)

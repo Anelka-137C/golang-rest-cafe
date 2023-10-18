@@ -31,6 +31,9 @@ func main() {
 
 	router := routes.NewRouter(eng, db)
 	router.MapRoutes()
+
+	productRouter := routes.NewProductRouter(eng, db)
+	productRouter.MapProductRoutes()
 	if err := eng.Run(); err != nil {
 		panic(err)
 	}
