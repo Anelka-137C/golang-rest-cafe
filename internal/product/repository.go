@@ -1,8 +1,14 @@
 package product
 
 import (
+	"context"
+	"errors"
+
 	"github.com/Anelka-137C/cafe-app/internal/domain"
+	"github.com/Anelka-137C/cafe-app/src/helpers"
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -22,8 +28,8 @@ type Repository interface {
 	GetAllProduct(c *gin.Context) (domain.Product, []domain.ErrorMsg)
 	DeleteProduct(c *gin.Context) []domain.ErrorMsg
 	UpdateProduct(c *gin.Context) []domain.ErrorMsg
-	ValidateName(c *gin.Context) bool
-	ValidateCategory(c *gin.Context) bool
+	ValidateName(name string) bool
+	ValidateCategory(category string) bool
 }
 
 func NewRepository(db *mongo.Client) Repository {
@@ -34,13 +40,23 @@ func NewRepository(db *mongo.Client) Repository {
 
 // CreateProduct implements Repository.
 func (r *repository) CreateProduct(c *gin.Context) (domain.Product, []domain.ErrorMsg) {
-	// dataBase := r.db.Database(dataBase)
-	// userColl := dataBase.Collection(productCollection)
-	newProduct := domain.Product{
-		Name:        "Hola",
-		Description: "Hola",
-		Price:       23,
-		Category:    "Hola",
+	dataBase := r.db.Database(dataBase)
+	productColl := dataBase.Collection(productCollection)
+	newProduct := domain.Product{}
+
+	if err := c.ShouldBindJSON(&newProduct); err != nil {
+
+		var ve validator.ValidationErrors
+		if errors.As(err, &ve) {
+			out := make([]domain.ErrorMsg, len(ve))
+			for i, fe := range ve {
+				out[i] = domain.ErrorMsg{Field: fe.Field(), Message: helpers.GetErrorMsg(fe)}
+			}
+			return newProduct, out
+		}
+	} else {
+
+		productColl.InsertOne(context.TODO(), newProduct)
 	}
 
 	return newProduct, nil
@@ -67,11 +83,16 @@ func (r *repository) UpdateProduct(c *gin.Context) []domain.ErrorMsg {
 }
 
 // ValidateCategory implements Repository.
-func (r *repository) ValidateCategory(c *gin.Context) bool {
-	panic("unimplemented")
+func (r *repository) ValidateCategory(category string) bool {
+	dataBase := r.db.Database(dataBase)
+	categoryColl := dataBase.Collection(categoriesCollection)
+	categoryToValidate := domain.Category{}
+	filter := bson.D{{Key: "name", Value: category}}
+	categoryColl.FindOne(context.TODO(), filter).Decode(&categoryToValidate)
+	return !categoryToValidate.ID.IsZero()
 }
 
 // ValidateName implements Repository.
-func (r *repository) ValidateName(c *gin.Context) bool {
+func (r *repository) ValidateName(name string) bool {
 	panic("unimplemented")
 }

@@ -3,7 +3,10 @@ package routes
 import (
 	"github.com/Anelka-137C/cafe-app/internal/product"
 	"github.com/Anelka-137C/cafe-app/src/handlers"
+	"github.com/Anelka-137C/cafe-app/src/middlewares"
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
+	"github.com/go-playground/validator/v10"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -37,11 +40,9 @@ func (r *productRouter) product() {
 	repo := product.NewRepository(r.db)
 	service := product.NewService(repo)
 	handler := handlers.NewProduct(service)
-	// if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
-	// v.RegisterValidation("validateEmail", middlewares.ValidateEmail(repo))
-	// v.RegisterValidation("validateRole", middlewares.ValidateRole(repo))
-	// v.RegisterValidation("validateIfExistEmail", middlewares.ValidateIfExistEmail(repo))
-	// }
+	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
+		v.RegisterValidation("ValidateCategory", middlewares.ValidateCategory(repo))
+	}
 	group.POST("/create", handler.CreateProduct())
 
 }

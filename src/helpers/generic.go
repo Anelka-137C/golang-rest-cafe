@@ -39,6 +39,8 @@ func GetErrorMsg(fe validator.FieldError) string {
 		return "Should be greater than " + fe.Param()
 	case "validateIfExistEmail":
 		return "The email " + fmt.Sprintf("%s", fe.Value()) + " is not registered"
+	case "ValidateCategory":
+		return "The category " + fmt.Sprintf("%s", fe.Value()) + " is not registered"
 	}
 
 	return "Unknown error"
