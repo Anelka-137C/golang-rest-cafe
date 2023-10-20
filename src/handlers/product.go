@@ -10,6 +10,8 @@ import (
 
 const (
 	productCreationMessage = "product successfully created"
+	productDeleteMessage   = "product successfully deleted"
+	productGetMessage      = "Product successfully obtained"
 )
 
 type Product struct {
@@ -30,5 +32,27 @@ func (p *Product) CreateProduct() gin.HandlerFunc {
 			return
 		}
 		util.BuildResponse(http.StatusOK, product, productCreationMessage, c)
+	}
+}
+
+func (p *Product) DeleteProduct() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		err := p.productService.DeleteProduct(c)
+		if err != nil {
+			util.BuildBadResponse(http.StatusBadRequest, err, c)
+			return
+		}
+		util.BuildResponse(http.StatusOK, nil, productDeleteMessage, c)
+	}
+}
+
+func (p *Product) GetProduct() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		product, err := p.productService.GetProduct(c)
+		if err != nil {
+			util.BuildBadResponse(http.StatusBadRequest, err, c)
+			return
+		}
+		util.BuildResponse(http.StatusOK, product, productGetMessage, c)
 	}
 }

@@ -44,5 +44,7 @@ func (r *productRouter) product() {
 		v.RegisterValidation("ValidateCategory", middlewares.ValidateCategory(repo))
 	}
 	group.POST("/create", handler.CreateProduct())
+	group.DELETE("delete/:_id", handler.DeleteProduct())
+	group.GET("get/:_id", handler.GetProduct())
 
 }

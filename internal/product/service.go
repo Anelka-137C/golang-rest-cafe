@@ -11,8 +11,8 @@ type service struct {
 
 type Service interface {
 	CreateProduct(c *gin.Context) (domain.Product, []domain.ErrorMsg)
-	GetProduct(c *gin.Context) (domain.Product, []domain.ErrorMsg)
-	GetAllProduct(c *gin.Context) (domain.Product, []domain.ErrorMsg)
+	GetProduct(c *gin.Context) (domain.ProductResponse, []domain.ErrorMsg)
+	GetAllProduct(c *gin.Context) (domain.ProductResponse, []domain.ErrorMsg)
 	DeleteProduct(c *gin.Context) []domain.ErrorMsg
 	UpdateProduct(c *gin.Context) []domain.ErrorMsg
 	ValidateName(c *gin.Context) bool
@@ -32,17 +32,17 @@ func (s *service) CreateProduct(c *gin.Context) (domain.Product, []domain.ErrorM
 
 // DeleteProduct implements Service.
 func (s *service) DeleteProduct(c *gin.Context) []domain.ErrorMsg {
-	panic("unimplemented")
+	return s.repository.DeleteProduct(c)
 }
 
 // GetAllProduct implements Service.
-func (s *service) GetAllProduct(c *gin.Context) (domain.Product, []domain.ErrorMsg) {
+func (s *service) GetAllProduct(c *gin.Context) (domain.ProductResponse, []domain.ErrorMsg) {
 	panic("unimplemented")
 }
 
 // GetProduct implements Service.
-func (s *service) GetProduct(c *gin.Context) (domain.Product, []domain.ErrorMsg) {
-	panic("unimplemented")
+func (s *service) GetProduct(c *gin.Context) (domain.ProductResponse, []domain.ErrorMsg) {
+	return s.repository.GetProduct(c)
 }
 
 // UpdateProduct implements Service.
