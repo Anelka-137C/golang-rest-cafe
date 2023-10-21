@@ -7,6 +7,7 @@ type Product struct {
 	Description string  `json:"description" bson:"description" binding:"required"`
 	Price       float32 `json:"price" bson:"price" binding:"required"`
 	Category    string  `json:"category" bson:"category" binding:"required,ValidateCategory"`
+	Active      bool    `json:"active" bson:"active" binding:"required"`
 }
 
 type ProductResponse struct {
@@ -15,6 +16,7 @@ type ProductResponse struct {
 	Description string             `json:"description" bson:"description" binding:"required"`
 	Price       float32            `json:"price" bson:"price" binding:"required"`
 	Category    string             `json:"category" bson:"category" binding:"category"`
+	Active      bool               `json:"active" bson:"active" binding:"required"`
 }
 
 type Category struct {

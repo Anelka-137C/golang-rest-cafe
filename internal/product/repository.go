@@ -26,10 +26,9 @@ type repository struct {
 type Repository interface {
 	CreateProduct(c *gin.Context) (domain.Product, []domain.ErrorMsg)
 	GetProduct(c *gin.Context) (domain.ProductResponse, []domain.ErrorMsg)
-	GetAllProduct(c *gin.Context) (domain.ProductResponse, []domain.ErrorMsg)
+	GetAllProduct(c *gin.Context) ([]domain.ProductResponse, []domain.ErrorMsg)
 	DeleteProduct(c *gin.Context) []domain.ErrorMsg
 	UpdateProduct(c *gin.Context) []domain.ErrorMsg
-	ValidateName(name string) bool
 	ValidateCategory(category string) bool
 }
 
@@ -82,8 +81,28 @@ func (r *repository) DeleteProduct(c *gin.Context) []domain.ErrorMsg {
 }
 
 // GetAllProduct implements Repository.
-func (r *repository) GetAllProduct(c *gin.Context) (domain.ProductResponse, []domain.ErrorMsg) {
-	panic("unimplemented")
+func (r *repository) GetAllProduct(c *gin.Context) ([]domain.ProductResponse, []domain.ErrorMsg) {
+	dataBase := r.db.Database(dataBase)
+	productColl := dataBase.Collection(productCollection)
+	productList := []domain.ProductResponse{}
+	// active := c.Query("active")
+	isActive := struct {
+		Active bool `json:"active"`
+	}{}
+	c.ShouldBindJSON(&isActive)
+	filter := bson.D{{Key: "active", Value: isActive.Active}}
+	cursor, err := productColl.Find(context.TODO(), filter)
+	if err != nil {
+		return nil, helpers.GenerateOneError("id", "The id is not a mongo id")
+	}
+
+	for cursor.Next(context.TODO()) {
+		product := domain.ProductResponse{}
+		cursor.Decode(&product)
+		productList = append(productList, product)
+	}
+
+	return productList, nil
 }
 
 // GetProduct implements Repository.
@@ -104,7 +123,37 @@ func (r *repository) GetProduct(c *gin.Context) (domain.ProductResponse, []domai
 
 // UpdateProduct implements Repository.
 func (r *repository) UpdateProduct(c *gin.Context) []domain.ErrorMsg {
-	panic("unimplemented")
+	dataBase := r.db.Database(dataBase)
+	productColl := dataBase.Collection(productCollection)
+	id := c.Param("_id")
+	objectId, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return helpers.GenerateOneError("id", "The id is not a mongo id")
+	}
+	auxProduct := domain.ProductResponse{}
+
+	filter := bson.D{{Key: "_id", Value: objectId}}
+	productColl.FindOne(context.TODO(), filter).Decode(&auxProduct)
+	if auxProduct.ID.IsZero() {
+		return helpers.GenerateOneError("id", "The product is not in data base")
+	}
+
+	product := domain.Product{}
+	if err := c.ShouldBindJSON(&product); err != nil {
+		return helpers.GenerateMultipleErrorMsg(err)
+	}
+	update := bson.D{{Key: "$set", Value: bson.D{
+		{Key: "name", Value: product.Name},
+		{Key: "description", Value: product.Description},
+		{Key: "price", Value: product.Price},
+		{Key: "category", Value: product.Category}}}}
+
+	_, err = productColl.UpdateOne(context.TODO(), filter, update)
+
+	if err != nil {
+		return helpers.GenerateOneError("id", "Error at the moment to update")
+	}
+	return nil
 }
 
 // ValidateCategory implements Repository.
@@ -115,9 +164,4 @@ func (r *repository) ValidateCategory(category string) bool {
 	filter := bson.D{{Key: "name", Value: category}}
 	categoryColl.FindOne(context.TODO(), filter).Decode(&categoryToValidate)
 	return !categoryToValidate.ID.IsZero()
-}
-
-// ValidateName implements Repository.
-func (r *repository) ValidateName(name string) bool {
-	panic("unimplemented")
 }

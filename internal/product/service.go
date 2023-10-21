@@ -12,11 +12,9 @@ type service struct {
 type Service interface {
 	CreateProduct(c *gin.Context) (domain.Product, []domain.ErrorMsg)
 	GetProduct(c *gin.Context) (domain.ProductResponse, []domain.ErrorMsg)
-	GetAllProduct(c *gin.Context) (domain.ProductResponse, []domain.ErrorMsg)
+	GetAllProduct(c *gin.Context) ([]domain.ProductResponse, []domain.ErrorMsg)
 	DeleteProduct(c *gin.Context) []domain.ErrorMsg
 	UpdateProduct(c *gin.Context) []domain.ErrorMsg
-	ValidateName(c *gin.Context) bool
-	ValidateCategory(c *gin.Context) bool
 }
 
 func NewService(r Repository) Service {
@@ -36,8 +34,8 @@ func (s *service) DeleteProduct(c *gin.Context) []domain.ErrorMsg {
 }
 
 // GetAllProduct implements Service.
-func (s *service) GetAllProduct(c *gin.Context) (domain.ProductResponse, []domain.ErrorMsg) {
-	panic("unimplemented")
+func (s *service) GetAllProduct(c *gin.Context) ([]domain.ProductResponse, []domain.ErrorMsg) {
+	return s.repository.GetAllProduct(c)
 }
 
 // GetProduct implements Service.
@@ -47,15 +45,5 @@ func (s *service) GetProduct(c *gin.Context) (domain.ProductResponse, []domain.E
 
 // UpdateProduct implements Service.
 func (s *service) UpdateProduct(c *gin.Context) []domain.ErrorMsg {
-	panic("unimplemented")
-}
-
-// ValidateCategory implements Service.
-func (s *service) ValidateCategory(c *gin.Context) bool {
-	panic("unimplemented")
-}
-
-// ValidateName implements Service.
-func (s *service) ValidateName(c *gin.Context) bool {
-	panic("unimplemented")
+	return s.repository.UpdateProduct(c)
 }
