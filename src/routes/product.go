@@ -43,10 +43,11 @@ func (r *productRouter) product() {
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
 		v.RegisterValidation("ValidateCategory", middlewares.ValidateCategory(repo))
 	}
-	group.POST("/create", handler.CreateProduct())
-	group.DELETE("/delete/:_id", handler.DeleteProduct())
-	group.GET("/get/:_id", handler.GetProduct())
-	group.PUT("/update/:_id", handler.UpdateProduct())
-	group.GET("/getAll", handler.GetAllProduct())
+	group.POST("/create", middlewares.ValidateJwt(), handler.CreateProduct())
+	group.DELETE("/delete/:_id", middlewares.ValidateJwt(), handler.DeleteProduct())
+	group.GET("/get/:_id", middlewares.ValidateJwtForUsers(), handler.GetProduct())
+	group.PUT("/update/:_id", middlewares.ValidateJwt(), handler.UpdateProduct())
+	group.GET("/getAll", middlewares.ValidateJwtForUsers(), handler.GetAllProduct())
+	group.GET("/getByName", middlewares.ValidateJwtForUsers(), handler.GetProductByName())
 
 }

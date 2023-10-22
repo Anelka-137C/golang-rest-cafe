@@ -13,6 +13,7 @@ type Service interface {
 	CreateProduct(c *gin.Context) (domain.Product, []domain.ErrorMsg)
 	GetProduct(c *gin.Context) (domain.ProductResponse, []domain.ErrorMsg)
 	GetAllProduct(c *gin.Context) ([]domain.ProductResponse, []domain.ErrorMsg)
+	GetProductByName(c *gin.Context) ([]domain.ProductResponse, []domain.ErrorMsg)
 	DeleteProduct(c *gin.Context) []domain.ErrorMsg
 	UpdateProduct(c *gin.Context) []domain.ErrorMsg
 }
@@ -36,6 +37,10 @@ func (s *service) DeleteProduct(c *gin.Context) []domain.ErrorMsg {
 // GetAllProduct implements Service.
 func (s *service) GetAllProduct(c *gin.Context) ([]domain.ProductResponse, []domain.ErrorMsg) {
 	return s.repository.GetAllProduct(c)
+}
+
+func (s *service) GetProductByName(c *gin.Context) ([]domain.ProductResponse, []domain.ErrorMsg) {
+	return s.repository.GetProductByName(c)
 }
 
 // GetProduct implements Service.

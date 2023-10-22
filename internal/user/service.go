@@ -15,6 +15,7 @@ type Service interface {
 	CreateUser(c *gin.Context) (domain.User, []domain.ErrorMsg)
 	GetUser(c *gin.Context) (domain.UserResponse, []domain.ErrorMsg)
 	GetUserByEmail(c *gin.Context) (domain.UserResponse, []domain.ErrorMsg)
+	GetUsersByName(c *gin.Context) ([]domain.UserResponse, []domain.ErrorMsg)
 	DeleteUser(c *gin.Context) []domain.ErrorMsg
 	UpdateUser(c *gin.Context) []domain.ErrorMsg
 	Login(c *gin.Context) (domain.LoginResponse, []domain.ErrorMsg)
@@ -32,6 +33,10 @@ func (s *service) CreateUser(c *gin.Context) (domain.User, []domain.ErrorMsg) {
 
 func (s *service) GetUser(c *gin.Context) (domain.UserResponse, []domain.ErrorMsg) {
 	return s.repository.GetUser(c)
+}
+
+func (s *service) GetUsersByName(c *gin.Context) ([]domain.UserResponse, []domain.ErrorMsg) {
+	return s.repository.GetUsersByName(c)
 }
 
 func (s *service) GetUserByEmail(c *gin.Context) (domain.UserResponse, []domain.ErrorMsg) {

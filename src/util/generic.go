@@ -5,7 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func BuildResponse(status int, object interface{}, message string, c *gin.Context) {
+func BuildResponse(status int, object interface{}, message string, c *gin.Context, entity string) {
 
 	switch object.(type) {
 	case domain.LoginResponse:
@@ -17,7 +17,7 @@ func BuildResponse(status int, object interface{}, message string, c *gin.Contex
 		if object != nil {
 			c.JSON(status, gin.H{
 				"msg":  message,
-				"user": object,
+				entity: object,
 			})
 		} else {
 			c.JSON(status, gin.H{

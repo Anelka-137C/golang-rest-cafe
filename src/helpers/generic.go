@@ -34,7 +34,7 @@ func GetErrorMsg(fe validator.FieldError) string {
 	case "email":
 		return "The format of " + fmt.Sprintf("%s", fe.Value()) + "does not correspond to an email address"
 	case "min":
-		return "Should be less than " + fe.Param()
+		return "Should be more than " + fe.Param()
 	case "max":
 		return "Should be greater than " + fe.Param()
 	case "validateIfExistEmail":

@@ -33,7 +33,7 @@ func (p *Product) CreateProduct() gin.HandlerFunc {
 			util.BuildBadResponse(http.StatusBadRequest, err, c)
 			return
 		}
-		util.BuildResponse(http.StatusOK, product, productCreationMessage, c)
+		util.BuildResponse(http.StatusOK, product, productCreationMessage, c, "Product")
 	}
 }
 
@@ -44,7 +44,7 @@ func (p *Product) DeleteProduct() gin.HandlerFunc {
 			util.BuildBadResponse(http.StatusBadRequest, err, c)
 			return
 		}
-		util.BuildResponse(http.StatusOK, nil, productDeleteMessage, c)
+		util.BuildResponse(http.StatusOK, nil, productDeleteMessage, c, "Product")
 	}
 }
 
@@ -55,7 +55,7 @@ func (p *Product) GetProduct() gin.HandlerFunc {
 			util.BuildBadResponse(http.StatusBadRequest, err, c)
 			return
 		}
-		util.BuildResponse(http.StatusOK, product, productGetMessage, c)
+		util.BuildResponse(http.StatusOK, product, productGetMessage, c, "Product")
 	}
 }
 
@@ -66,7 +66,7 @@ func (p *Product) UpdateProduct() gin.HandlerFunc {
 			util.BuildBadResponse(http.StatusBadRequest, err, c)
 			return
 		}
-		util.BuildResponse(http.StatusOK, nil, productUpdateMessage, c)
+		util.BuildResponse(http.StatusOK, nil, productUpdateMessage, c, "Product")
 	}
 }
 func (p *Product) GetAllProduct() gin.HandlerFunc {
@@ -76,6 +76,17 @@ func (p *Product) GetAllProduct() gin.HandlerFunc {
 			util.BuildBadResponse(http.StatusBadRequest, err, c)
 			return
 		}
-		util.BuildResponse(http.StatusOK, productList, productGetAllMessage, c)
+		util.BuildResponse(http.StatusOK, productList, productGetAllMessage, c, "Products")
+	}
+}
+
+func (p *Product) GetProductByName() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		productList, err := p.productService.GetProductByName(c)
+		if err != nil {
+			util.BuildBadResponse(http.StatusBadRequest, err, c)
+			return
+		}
+		util.BuildResponse(http.StatusOK, productList, productGetAllMessage, c, "Products")
 	}
 }

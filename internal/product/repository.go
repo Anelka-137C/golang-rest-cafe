@@ -3,6 +3,7 @@ package product
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/Anelka-137C/cafe-app/internal/domain"
 	"github.com/Anelka-137C/cafe-app/src/helpers"
@@ -27,6 +28,7 @@ type Repository interface {
 	CreateProduct(c *gin.Context) (domain.Product, []domain.ErrorMsg)
 	GetProduct(c *gin.Context) (domain.ProductResponse, []domain.ErrorMsg)
 	GetAllProduct(c *gin.Context) ([]domain.ProductResponse, []domain.ErrorMsg)
+	GetProductByName(c *gin.Context) ([]domain.ProductResponse, []domain.ErrorMsg)
 	DeleteProduct(c *gin.Context) []domain.ErrorMsg
 	UpdateProduct(c *gin.Context) []domain.ErrorMsg
 	ValidateCategory(category string) bool
@@ -55,7 +57,6 @@ func (r *repository) CreateProduct(c *gin.Context) (domain.Product, []domain.Err
 			return newProduct, out
 		}
 	} else {
-
 		productColl.InsertOne(context.TODO(), newProduct)
 	}
 
@@ -67,6 +68,7 @@ func (r *repository) DeleteProduct(c *gin.Context) []domain.ErrorMsg {
 	dataBase := r.db.Database(dataBase)
 	productColl := dataBase.Collection(productCollection)
 	id := c.Param("_id")
+
 	objectId, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return helpers.GenerateOneError("id", "The id is not a mongo id")
@@ -85,7 +87,11 @@ func (r *repository) GetAllProduct(c *gin.Context) ([]domain.ProductResponse, []
 	dataBase := r.db.Database(dataBase)
 	productColl := dataBase.Collection(productCollection)
 	productList := []domain.ProductResponse{}
-	// active := c.Query("active")
+	role := c.Query("role")
+	if role == "" {
+		return nil, helpers.GenerateOneError("role", "You must send user's role")
+	}
+
 	isActive := struct {
 		Active bool `json:"active"`
 	}{}
@@ -99,7 +105,50 @@ func (r *repository) GetAllProduct(c *gin.Context) ([]domain.ProductResponse, []
 	for cursor.Next(context.TODO()) {
 		product := domain.ProductResponse{}
 		cursor.Decode(&product)
-		productList = append(productList, product)
+		if role == "ADMIN_ROLE" {
+			productList = append(productList, product)
+		} else {
+			if product.Active {
+				productList = append(productList, product)
+			}
+		}
+	}
+
+	return productList, nil
+}
+
+func (r *repository) GetProductByName(c *gin.Context) ([]domain.ProductResponse, []domain.ErrorMsg) {
+	dataBase := r.db.Database(dataBase)
+	productColl := dataBase.Collection(productCollection)
+	productList := []domain.ProductResponse{}
+	productName := c.Query("name")
+	role := c.Query("role")
+	if role == "" {
+		return nil, helpers.GenerateOneError("role", "You must send user's role")
+	}
+	regularExpre := fmt.Sprintf("%s.*", productName)
+	filter := bson.D{{Key: "name", Value: bson.D{{Key: "$regex", Value: regularExpre}}}}
+
+	cursor, err := productColl.Find(context.TODO(), filter)
+
+	if err != nil {
+		return nil, helpers.GenerateOneError("name", "There was an error during the search")
+	}
+
+	for cursor.Next(context.TODO()) {
+		product := domain.ProductResponse{}
+		cursor.Decode(&product)
+		if role == "ADMIN_ROLE" {
+			productList = append(productList, product)
+		} else {
+			if product.Active {
+				productList = append(productList, product)
+			}
+		}
+	}
+
+	if len(productList) == 0 {
+		return nil, helpers.GenerateOneError("name", "There is no product with the name: "+productName)
 	}
 
 	return productList, nil
@@ -109,14 +158,26 @@ func (r *repository) GetAllProduct(c *gin.Context) ([]domain.ProductResponse, []
 func (r *repository) GetProduct(c *gin.Context) (domain.ProductResponse, []domain.ErrorMsg) {
 	dataBase := r.db.Database(dataBase)
 	productColl := dataBase.Collection(productCollection)
-	id := c.Param("_id")
 	product := domain.ProductResponse{}
+	id := c.Param("_id")
+	role := c.Query("role")
+	if role == "" {
+		return product, helpers.GenerateOneError("role", "You must send user's role")
+	}
 	objectId, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return product, helpers.GenerateOneError("id", "The id is not a mongo id")
 	}
 	filter := bson.D{{Key: "_id", Value: objectId}}
 	productColl.FindOne(context.TODO(), filter).Decode(&product)
+
+	if product.ID.IsZero() {
+		return product, helpers.GenerateOneError("id", "There is no product with id: "+id)
+	}
+
+	if role != "ADMIN_ROLE" && !product.Active {
+		return product, helpers.GenerateOneError("id", "The product is not activate")
+	}
 
 	return product, nil
 }
@@ -126,6 +187,14 @@ func (r *repository) UpdateProduct(c *gin.Context) []domain.ErrorMsg {
 	dataBase := r.db.Database(dataBase)
 	productColl := dataBase.Collection(productCollection)
 	id := c.Param("_id")
+	role := c.Query("role")
+
+	if role != "ADMIN_ROLE" {
+		return helpers.GenerateOneError("role", "the "+role+" role does not have permissions to perform this action.")
+	} else if role == "" {
+		return helpers.GenerateOneError("role", "You must send user's role")
+	}
+
 	objectId, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return helpers.GenerateOneError("id", "The id is not a mongo id")
@@ -146,7 +215,8 @@ func (r *repository) UpdateProduct(c *gin.Context) []domain.ErrorMsg {
 		{Key: "name", Value: product.Name},
 		{Key: "description", Value: product.Description},
 		{Key: "price", Value: product.Price},
-		{Key: "category", Value: product.Category}}}}
+		{Key: "category", Value: product.Category},
+		{Key: "active", Value: product.Active}}}}
 
 	_, err = productColl.UpdateOne(context.TODO(), filter, update)
 

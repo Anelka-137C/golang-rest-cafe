@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"os"
 	"time"
@@ -34,6 +35,7 @@ type Repository interface {
 	CreateUser(c *gin.Context) (domain.User, []domain.ErrorMsg)
 	GetUser(c *gin.Context) (domain.UserResponse, []domain.ErrorMsg)
 	GetUserByEmail(c *gin.Context) (domain.UserResponse, []domain.ErrorMsg)
+	GetUsersByName(c *gin.Context) ([]domain.UserResponse, []domain.ErrorMsg)
 	DeleteUser(c *gin.Context) []domain.ErrorMsg
 	UpdateUser(c *gin.Context) []domain.ErrorMsg
 	Login(c *gin.Context) (domain.LoginResponse, []domain.ErrorMsg)
@@ -92,6 +94,33 @@ func (r *repository) GetUser(c *gin.Context) (domain.UserResponse, []domain.Erro
 	}
 
 	return user, nil
+}
+
+func (r *repository) GetUsersByName(c *gin.Context) ([]domain.UserResponse, []domain.ErrorMsg) {
+
+	dataBase := r.db.Database(dataBase)
+	userColl := dataBase.Collection(userCollection)
+	user := domain.UserResponse{}
+	userList := []domain.UserResponse{}
+	userName := c.Query("name")
+	regularExpr := fmt.Sprintf("%s.*", userName)
+	filter := bson.D{{Key: "name", Value: bson.D{{Key: "$regex", Value: regularExpr}}}}
+
+	cursor, err := userColl.Find(context.TODO(), filter)
+	if err != nil {
+		return nil, helpers.GenerateOneError("name", "There was an error during the search")
+	}
+
+	for cursor.Next(context.TODO()) {
+		cursor.Decode(&user)
+		userList = append(userList, user)
+	}
+
+	if len(userList) == 0 {
+		return nil, helpers.GenerateOneError("name", "There is no users with this name: "+userName)
+	}
+
+	return userList, nil
 }
 
 func (r *repository) GetUserByEmail(c *gin.Context) (domain.UserResponse, []domain.ErrorMsg) {
@@ -202,6 +231,10 @@ func (r *repository) Login(c *gin.Context) (domain.LoginResponse, []domain.Error
 
 	if err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(login.Password)); err != nil {
 		return loginResponse, helpers.GenerateOneError("password", "The password is not correct")
+	}
+
+	if !user.Active {
+		return loginResponse, helpers.GenerateOneError("id", "User is not activate, you must reactivate the account")
 	}
 
 	token := jwt.New(jwt.SigningMethodHS256)

@@ -32,7 +32,7 @@ func (u *User) CreateUser() gin.HandlerFunc {
 			util.BuildBadResponse(http.StatusBadRequest, err, c)
 			return
 		}
-		util.BuildResponse(http.StatusOK, user, creationMessage, c)
+		util.BuildResponse(http.StatusOK, user, creationMessage, c, "User")
 	}
 }
 
@@ -43,7 +43,19 @@ func (u *User) GetUser() gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err})
 			return
 		}
-		util.BuildResponse(http.StatusOK, user, getMessage, c)
+		util.BuildResponse(http.StatusOK, user, getMessage, c, "User")
+	}
+
+}
+
+func (u *User) GetUsersByName() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		users, err := u.userService.GetUsersByName(c)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err})
+			return
+		}
+		util.BuildResponse(http.StatusOK, users, getMessage, c, "Users")
 	}
 
 }
@@ -55,7 +67,7 @@ func (u *User) GetUserByEmail() gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err})
 			return
 		}
-		util.BuildResponse(http.StatusOK, user, getMessage, c)
+		util.BuildResponse(http.StatusOK, user, getMessage, c, "User")
 	}
 
 }
@@ -67,7 +79,7 @@ func (u *User) DeleteUser() gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err})
 			return
 		}
-		util.BuildResponse(http.StatusOK, nil, deleteMesage, c)
+		util.BuildResponse(http.StatusOK, nil, deleteMesage, c, "User")
 	}
 
 }
@@ -79,7 +91,7 @@ func (u *User) UpdateUser() gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err})
 			return
 		}
-		util.BuildResponse(http.StatusOK, nil, updateMessage, c)
+		util.BuildResponse(http.StatusOK, nil, updateMessage, c, "User")
 	}
 }
 
@@ -90,6 +102,6 @@ func (u *User) Login() gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err})
 			return
 		}
-		util.BuildResponse(http.StatusOK, jwt, updateMessage, c)
+		util.BuildResponse(http.StatusOK, jwt, updateMessage, c, "User")
 	}
 }

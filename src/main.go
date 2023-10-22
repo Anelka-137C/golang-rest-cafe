@@ -29,8 +29,8 @@ func main() {
 		log.Fatal("Error to connect DB")
 	}
 
-	router := routes.NewRouter(eng, db)
-	router.MapRoutes()
+	router := routes.NewUserRouter(eng, db)
+	router.MapUserRoutes()
 
 	productRouter := routes.NewProductRouter(eng, db)
 	productRouter.MapProductRoutes()
