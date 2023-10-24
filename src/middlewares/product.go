@@ -27,7 +27,14 @@ func ValidateJwtForUsers() gin.HandlerFunc {
 		date := time.Now()
 		token := c.GetHeader("token")
 
-		claims := util.ExtractClaimsFromJwt(token, c)
+		claims, err := util.ExtractClaimsFromJwt(token, c)
+
+		if err != nil {
+			errors := helpers.GenerateOneError("token", err.Error())
+			util.BuildBadResponse(http.StatusBadRequest, errors, c)
+			c.Abort()
+			return
+		}
 		if !claims.VerifyExpiresAt(date.UnixMilli(), true) {
 			errors := helpers.GenerateOneError("token", "Session expired")
 			util.BuildBadResponse(http.StatusBadRequest, errors, c)

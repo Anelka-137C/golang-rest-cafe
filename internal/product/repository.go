@@ -7,6 +7,7 @@ import (
 
 	"github.com/Anelka-137C/cafe-app/internal/domain"
 	"github.com/Anelka-137C/cafe-app/src/helpers"
+	"github.com/Anelka-137C/cafe-app/src/util"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"go.mongodb.org/mongo-driver/bson"
@@ -87,10 +88,13 @@ func (r *repository) GetAllProduct(c *gin.Context) ([]domain.ProductResponse, []
 	dataBase := r.db.Database(dataBase)
 	productColl := dataBase.Collection(productCollection)
 	productList := []domain.ProductResponse{}
-	role := c.Query("role")
-	if role == "" {
-		return nil, helpers.GenerateOneError("role", "You must send user's role")
+	token := c.GetHeader("token")
+	claims, err := util.ExtractClaimsFromJwt(token, c)
+
+	if err != nil {
+		return productList, helpers.GenerateOneError("token", err.Error())
 	}
+	role := claims["role"]
 
 	isActive := struct {
 		Active bool `json:"active"`
@@ -122,10 +126,14 @@ func (r *repository) GetProductByName(c *gin.Context) ([]domain.ProductResponse,
 	productColl := dataBase.Collection(productCollection)
 	productList := []domain.ProductResponse{}
 	productName := c.Query("name")
-	role := c.Query("role")
-	if role == "" {
-		return nil, helpers.GenerateOneError("role", "You must send user's role")
+
+	token := c.GetHeader("token")
+	claims, err := util.ExtractClaimsFromJwt(token, c)
+
+	if err != nil {
+		return productList, helpers.GenerateOneError("token", err.Error())
 	}
+	role := claims["role"]
 	regularExpre := fmt.Sprintf("%s.*", productName)
 	filter := bson.D{{Key: "name", Value: bson.D{{Key: "$regex", Value: regularExpre}}}}
 
@@ -160,10 +168,13 @@ func (r *repository) GetProduct(c *gin.Context) (domain.ProductResponse, []domai
 	productColl := dataBase.Collection(productCollection)
 	product := domain.ProductResponse{}
 	id := c.Param("_id")
-	role := c.Query("role")
-	if role == "" {
-		return product, helpers.GenerateOneError("role", "You must send user's role")
+	token := c.GetHeader("token")
+	claims, err := util.ExtractClaimsFromJwt(token, c)
+
+	if err != nil {
+		return product, helpers.GenerateOneError("token", err.Error())
 	}
+	role := claims["role"]
 	objectId, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return product, helpers.GenerateOneError("id", "The id is not a mongo id")
@@ -187,12 +198,16 @@ func (r *repository) UpdateProduct(c *gin.Context) []domain.ErrorMsg {
 	dataBase := r.db.Database(dataBase)
 	productColl := dataBase.Collection(productCollection)
 	id := c.Param("_id")
-	role := c.Query("role")
+	token := c.GetHeader("token")
+	claims, err := util.ExtractClaimsFromJwt(token, c)
+
+	if err != nil {
+		return helpers.GenerateOneError("token", err.Error())
+	}
+	role := claims["role"]
 
 	if role != "ADMIN_ROLE" {
-		return helpers.GenerateOneError("role", "the "+role+" role does not have permissions to perform this action.")
-	} else if role == "" {
-		return helpers.GenerateOneError("role", "You must send user's role")
+		return helpers.GenerateOneError("role", "the "+fmt.Sprintf("%s", role)+" role does not have permissions to perform this action.")
 	}
 
 	objectId, err := primitive.ObjectIDFromHex(id)

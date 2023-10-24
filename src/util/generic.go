@@ -1,11 +1,10 @@
 package util
 
 import (
-	"net/http"
+	"errors"
 	"os"
 
 	"github.com/Anelka-137C/cafe-app/internal/domain"
-	"github.com/Anelka-137C/cafe-app/src/helpers"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -44,14 +43,13 @@ func BuildBadResponse(status int, err []domain.ErrorMsg, c *gin.Context) {
 	c.JSON(status, gin.H{"error": err})
 }
 
-func ExtractClaimsFromJwt(tokenString string, c *gin.Context) *jwt.MapClaims {
+func ExtractClaimsFromJwt(tokenString string, c *gin.Context) (jwt.MapClaims, error) {
 	claims := jwt.MapClaims{}
 	token := c.GetHeader("token")
 	err := godotenv.Load()
 	if err != nil {
-		errors := helpers.GenerateOneError("env", "Error loading .env file")
-		BuildBadResponse(http.StatusBadRequest, errors, c)
-		c.Abort()
+		return claims, errors.New("Error to load .env")
+
 	}
 	sampleSecretKey := os.Getenv(secretKey)
 	_, err = jwt.ParseWithClaims(token, claims, func(token *jwt.Token) (interface{}, error) {
@@ -59,11 +57,9 @@ func ExtractClaimsFromJwt(tokenString string, c *gin.Context) *jwt.MapClaims {
 	})
 
 	if err != nil {
-		errors := helpers.GenerateOneError("token", "You must send this field")
-		BuildBadResponse(http.StatusBadRequest, errors, c)
-		c.Abort()
-		return &claims
+		return claims, errors.New("You must send this field")
+
 	}
 
-	return &claims
+	return claims, nil
 }
