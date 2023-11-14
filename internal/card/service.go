@@ -13,7 +13,7 @@ type Service interface {
 	CreateCard(c *gin.Context) (domain.Card, []domain.ErrorMsg)
 	GetCard(c *gin.Context) (domain.CardResponse, []domain.ErrorMsg)
 	DeleteCard(c *gin.Context) []domain.ErrorMsg
-	UpdateCard(c *gin.Context) []domain.ErrorMsg
+	AddToCard(c *gin.Context) (domain.CardResponse, []domain.ErrorMsg)
 }
 
 func NewService(r Repository) Service {
@@ -34,10 +34,10 @@ func (s *service) DeleteCard(c *gin.Context) []domain.ErrorMsg {
 
 // GetCard implements Service.
 func (s *service) GetCard(c *gin.Context) (domain.CardResponse, []domain.ErrorMsg) {
-	panic("unimplemented")
+	return s.repository.GetCard(c)
 }
 
 // UpdateCard implements Service.
-func (s *service) UpdateCard(c *gin.Context) []domain.ErrorMsg {
-	panic("unimplemented")
+func (s *service) AddToCard(c *gin.Context) (domain.CardResponse, []domain.ErrorMsg) {
+	return s.repository.AddToCard(c)
 }

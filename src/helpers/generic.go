@@ -41,6 +41,11 @@ func GetErrorMsg(fe validator.FieldError) string {
 		return "The email " + fmt.Sprintf("%s", fe.Value()) + " is not registered"
 	case "ValidateCategory":
 		return "The category " + fmt.Sprintf("%s", fe.Value()) + " is not registered"
+	case "ValidateProducts":
+		return "Make sure that the items in the list exist in db: " + fmt.Sprintf("%s", fe.Value())
+	case "ValidateIsEmptyProducts":
+		return "Make sure that the article list is not empty"
+
 	}
 
 	return "Unknown error"

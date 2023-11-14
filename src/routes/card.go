@@ -40,10 +40,14 @@ func (r *cardRouter) card() {
 	repo := card.NewRepository(r.db)
 	service := card.NewService(repo)
 	handler := handlers.NewCard(service)
+
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
-		v.RegisterValidation("ValidateArticle", middlewares.ValidateArticle(repo))
+		v.RegisterValidation("ValidateIsEmptyProducts", middlewares.ValidateIsEmptyProducts())
+		v.RegisterValidation("ValidateProducts", middlewares.ValidateProducts(repo))
 	}
 	group.POST("/create" /*middlewares.ValidateJwt()*/, handler.CreateCard())
+	group.GET("/get/:_id" /*middlewares.ValidateJwtForUsers()*/, handler.GetCard())
+	group.PUT("/addToCard/:_id" /*middlewares.ValidateJwtForUsers()*/, handler.AddToCard())
 	// group.DELETE("/delete/:_id", middlewares.ValidateJwt(), handler.DeleteProduct())
 	// group.GET("/get/:_id", middlewares.ValidateJwtForUsers(), handler.GetProduct())
 	// group.PUT("/update/:_id", middlewares.ValidateJwt(), handler.UpdateProduct())

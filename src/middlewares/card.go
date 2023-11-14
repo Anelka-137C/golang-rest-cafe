@@ -6,10 +6,22 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-func ValidateArticle(db card.Repository) validator.Func {
+func ValidateIsEmptyProducts() validator.Func {
 
 	return func(fl validator.FieldLevel) bool {
-		article := fl.Field().Interface().([]domain.Article)
+		article := fl.Field().Interface().([]domain.ProductInCard)
+		if len(article) == 0 {
+			return false
+		} else {
+			return true
+		}
+	}
+}
+
+func ValidateProducts(db card.Repository) validator.Func {
+
+	return func(fl validator.FieldLevel) bool {
+		article := fl.Field().Interface().([]domain.ProductInCard)
 		return db.ValidateArticle(article)
 	}
 }

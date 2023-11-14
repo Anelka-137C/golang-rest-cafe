@@ -10,6 +10,8 @@ import (
 
 const (
 	cardCreationMessage = "Card successfully created"
+	cardGetMessage      = "Card successfully obtained"
+	cardAddMessage      = "Card successfully added"
 )
 
 type Card struct {
@@ -22,13 +24,35 @@ func NewCard(s card.Service) *Card {
 	}
 }
 
-func (p *Card) CreateCard() gin.HandlerFunc {
+func (ca *Card) CreateCard() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		card, err := p.CardService.CreateCard(c)
+		card, err := ca.CardService.CreateCard(c)
 		if err != nil {
 			util.BuildBadResponse(http.StatusBadRequest, err, c)
 			return
 		}
 		util.BuildResponse(http.StatusOK, card, cardCreationMessage, c, "Product")
+	}
+}
+
+func (ca *Card) GetCard() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		card, err := ca.CardService.GetCard(c)
+		if err != nil {
+			util.BuildBadResponse(http.StatusBadRequest, err, c)
+			return
+		}
+		util.BuildResponse(http.StatusOK, card, cardGetMessage, c, "Card")
+	}
+}
+
+func (ca *Card) AddToCard() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		card, err := ca.CardService.AddToCard(c)
+		if err != nil {
+			util.BuildBadResponse(http.StatusBadRequest, err, c)
+			return
+		}
+		util.BuildResponse(http.StatusOK, card, cardAddMessage, c, "Card")
 	}
 }
