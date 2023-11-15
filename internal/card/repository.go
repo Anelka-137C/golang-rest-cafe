@@ -27,6 +27,7 @@ type Repository interface {
 	CreateCard(c *gin.Context) (domain.Card, []domain.ErrorMsg)
 	GetCard(c *gin.Context) (domain.CardResponse, []domain.ErrorMsg)
 	AddToCard(c *gin.Context) (domain.CardResponse, []domain.ErrorMsg)
+	RestToCard(c *gin.Context) (domain.CardResponse, []domain.ErrorMsg)
 	DeleteCard(c *gin.Context) []domain.ErrorMsg
 	ValidateArticle(articles []domain.ProductInCard) bool
 }
@@ -60,9 +61,21 @@ func (r *repository) CreateCard(c *gin.Context) (domain.Card, []domain.ErrorMsg)
 	return newCard, nil
 }
 
-// DeleteCard implements Repository.
 func (r *repository) DeleteCard(c *gin.Context) []domain.ErrorMsg {
-	panic("unimplemented")
+
+	dataBase := r.db.Database(dataBase)
+	cardColl := dataBase.Collection(CardCollection)
+
+	idUser := c.Param("_id")
+	filter := bson.D{{Key: "id_user", Value: idUser}}
+
+	_, err := cardColl.DeleteOne(context.TODO(), filter)
+
+	if err != nil {
+		return helpers.GenerateOneError("id user", " Is not in db")
+	}
+
+	return nil
 }
 
 // GetCard implements Repository.
@@ -138,6 +151,47 @@ func (r *repository) AddToCard(c *gin.Context) (domain.CardResponse, []domain.Er
 
 }
 
+func (r *repository) RestToCard(c *gin.Context) (domain.CardResponse, []domain.ErrorMsg) {
+	dataBase := r.db.Database(dataBase)
+	cardColl := dataBase.Collection(CardCollection)
+	cardResponse := domain.CardResponse{}
+	newCardProduct := domain.ProductInCard{}
+
+	if err := c.ShouldBindJSON(&newCardProduct); err != nil {
+
+		var ve validator.ValidationErrors
+		if errors.As(err, &ve) {
+			out := make([]domain.ErrorMsg, len(ve))
+			for i, fe := range ve {
+				out[i] = domain.ErrorMsg{Field: fe.Field(), Message: helpers.GetErrorMsg(fe)}
+			}
+			return cardResponse, out
+		}
+	}
+
+	idUser := c.Param("_id")
+	filter := bson.D{{Key: "id_user", Value: idUser}}
+	cardColl.FindOne(context.TODO(), filter).Decode(&cardResponse)
+
+	productList := cardResponse.ProductList
+
+	contains, index := verifyContainsProduct(newCardProduct.IdProduct, productList)
+	if contains {
+
+		cardProduct := productList[index]
+		cardProduct.Quantitie = cardProduct.Quantitie - newCardProduct.Quantitie
+		productList[index] = cardProduct
+		cardResponse.ProductList = productList
+	}
+
+	updatedList := bson.D{{Key: "product_list", Value: productList}}
+	update := bson.D{{Key: "$set", Value: updatedList}}
+	cardColl.UpdateOne(context.TODO(), filter, update)
+
+	return cardResponse, nil
+
+}
+
 func verifyContainsProduct(id string, productList []domain.ProductInCard) (bool, int) {
 
 	for index, product := range productList {
@@ -145,6 +199,5 @@ func verifyContainsProduct(id string, productList []domain.ProductInCard) (bool,
 			return true, index
 		}
 	}
-
 	return false, 0
 }

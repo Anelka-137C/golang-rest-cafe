@@ -56,3 +56,25 @@ func (ca *Card) AddToCard() gin.HandlerFunc {
 		util.BuildResponse(http.StatusOK, card, cardAddMessage, c, "Card")
 	}
 }
+
+func (ca *Card) RestToCard() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		card, err := ca.CardService.RestToCard(c)
+		if err != nil {
+			util.BuildBadResponse(http.StatusBadRequest, err, c)
+			return
+		}
+		util.BuildResponse(http.StatusOK, card, cardAddMessage, c, "Card")
+	}
+}
+
+func (ca *Card) DeleteCard() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		err := ca.CardService.DeleteCard(c)
+		if err != nil {
+			util.BuildBadResponse(http.StatusBadRequest, err, c)
+			return
+		}
+		util.BuildResponse(http.StatusOK, "", cardAddMessage, c, "Card")
+	}
+}

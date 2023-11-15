@@ -45,13 +45,10 @@ func (r *cardRouter) card() {
 		v.RegisterValidation("ValidateIsEmptyProducts", middlewares.ValidateIsEmptyProducts())
 		v.RegisterValidation("ValidateProducts", middlewares.ValidateProducts(repo))
 	}
-	group.POST("/create" /*middlewares.ValidateJwt()*/, handler.CreateCard())
-	group.GET("/get/:_id" /*middlewares.ValidateJwtForUsers()*/, handler.GetCard())
-	group.PUT("/addToCard/:_id" /*middlewares.ValidateJwtForUsers()*/, handler.AddToCard())
-	// group.DELETE("/delete/:_id", middlewares.ValidateJwt(), handler.DeleteProduct())
-	// group.GET("/get/:_id", middlewares.ValidateJwtForUsers(), handler.GetProduct())
-	// group.PUT("/update/:_id", middlewares.ValidateJwt(), handler.UpdateProduct())
-	// group.GET("/getAll", middlewares.ValidateJwtForUsers(), handler.GetAllProduct())
-	// group.GET("/getByName", middlewares.ValidateJwtForUsers(), handler.GetProductByName())
 
+	group.POST("/create", middlewares.ValidateJwt(), handler.CreateCard())
+	group.GET("/get/:_id", middlewares.ValidateJwtForUsers(), handler.GetCard())
+	group.PUT("/addToCard/:_id", middlewares.ValidateJwtForUsers(), handler.AddToCard())
+	group.PUT("/restToCard/:_id", middlewares.ValidateJwtForUsers(), handler.RestToCard())
+	group.DELETE("/delete/:_id", middlewares.ValidateJwt(), handler.DeleteCard())
 }
