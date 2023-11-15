@@ -16,21 +16,21 @@ type router struct {
 	rg  *gin.RouterGroup
 }
 
-type Router interface {
-	MapRoutes()
+type UserRouter interface {
+	MapUserRoutes()
 }
 
-func NewRouter(eng *gin.Engine, db *mongo.Client) Router {
+func NewUserRouter(eng *gin.Engine, db *mongo.Client) UserRouter {
 	return &router{eng: eng, db: db}
 }
 
 // MapRoutes implements Router.
-func (r *router) MapRoutes() {
-	r.setGroup()
+func (r *router) MapUserRoutes() {
+	r.setUserGroup()
 	r.user()
 }
 
-func (r *router) setGroup() {
+func (r *router) setUserGroup() {
 	r.rg = r.eng.Group("/users")
 }
 
@@ -45,9 +45,11 @@ func (r *router) user() {
 		v.RegisterValidation("validateRole", middlewares.ValidateRole(repo))
 		v.RegisterValidation("validateIfExistEmail", middlewares.ValidateIfExistEmail(repo))
 	}
-	group.POST("/create", handler.CreateUser())
-	group.GET("/get/:_id", handler.GetUser())
-	group.DELETE("/delete/:_id", handler.DeleteUser())
-	group.PUT("/update/:_id", handler.UpdateUser())
+	group.POST("/create", middlewares.ValidateJwt(), handler.CreateUser())
+	group.GET("/get/:_id", middlewares.ValidateJwt(), handler.GetUser())
+	group.GET("/getEmail", middlewares.ValidateJwt(), handler.GetUserByEmail())
+	group.GET("/getByName", middlewares.ValidateJwt(), handler.GetUsersByName())
+	group.DELETE("/delete/:_id", middlewares.ValidateJwt(), handler.DeleteUser())
+	group.PUT("/update/:_id", middlewares.ValidateJwt(), handler.UpdateUser())
 	group.POST("/login", handler.Login())
 }

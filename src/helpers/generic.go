@@ -34,11 +34,18 @@ func GetErrorMsg(fe validator.FieldError) string {
 	case "email":
 		return "The format of " + fmt.Sprintf("%s", fe.Value()) + "does not correspond to an email address"
 	case "min":
-		return "Should be less than " + fe.Param()
+		return "Should be more than " + fe.Param()
 	case "max":
 		return "Should be greater than " + fe.Param()
 	case "validateIfExistEmail":
 		return "The email " + fmt.Sprintf("%s", fe.Value()) + " is not registered"
+	case "ValidateCategory":
+		return "The category " + fmt.Sprintf("%s", fe.Value()) + " is not registered"
+	case "ValidateProducts":
+		return "Make sure that the items in the list exist in db: " + fmt.Sprintf("%s", fe.Value())
+	case "ValidateIsEmptyProducts":
+		return "Make sure that the article list is not empty"
+
 	}
 
 	return "Unknown error"
